@@ -17,9 +17,9 @@
         private int $clubID;
         private int $roleID;
         private DateTime $joinedAt;
-        private string $status;
+        private MembershipStatus $status;
 
-        public function __construct(int $sID, int $cID, int $rID, DateTime $jAt, ?string $s = null, ?int $id = null) {
+        public function __construct(int $sID, int $cID, int $rID, DateTime $jAt, ?MembershipStatus $s = null, ?int $id = null) {
             if ($id !== null) {
                 $this->setID($id);
             }
@@ -51,23 +51,23 @@
         }
 
         private function markApprove(): void {
-            $this->status = (MembershipStatus::APPROVE)->value;
+            $this->status = MembershipStatus::APPROVE;
         }
 
         private function markReject(): void {
-            $this->status = (MembershipStatus::REJECT)->value;
+            $this->status = MembershipStatus::REJECT;
         }
 
         private function markLeave(): void {
-            $this->status = (MembershipStatus::LEAVE)->value;
+            $this->status = MembershipStatus::LEAVE;
         }
 
         private function markProhibit(): void {
-            $this->status = (MembershipStatus::PROHIBIT)->value;
+            $this->status = MembershipStatus::PROHIBIT;
         }
 
         private function markPending(): void {
-            $this->status = (MembershipStatus::PENDING)->value;
+            $this->status = MembershipStatus::PENDING;
         }
 
         public function setStatus(?string $s): void {
@@ -95,7 +95,7 @@
         public function getClubID(): int {return $this->clubID;}
         public function getRoleID(): int {return $this->roleID;}
         public function getJoinedTimeline(): DateTime {return $this->joinedAt;}
-        public function getStatus(): string {return $this->status;}
+        public function getStatus(): MembershipStatus {return $this->status;}
     }
 
     class MembershipRepository extends BaseRepository {
@@ -132,6 +132,26 @@
             if (!$isSucess) throw new RuntimeException("Failed to create membership request");
 
             return $membership;
+        }
+
+        protected function hydrate(array $row): Membership {
+            if (empty($row)) throw new RuntimeException("Empty row!");
+
+            try {
+                $jAt = new DateTime($row["joined_at"]);
+                $membership = new Membership(
+                    (int)$row["student_ID"],
+                    (int)$row["club_ID"],
+                    (int)$row["role_ID"],
+                    $jAt,
+                    MembershipStatus::from($row["membership_status"]),
+                    (int)$row["ID"]
+                );
+                return $membership;
+            } catch (PDOException $ex) {
+                error_log($ex->getMessage());
+                throw new RuntimeException("Invalid founded date!");
+            }
         }
 
         public function findByID(int $id): ?Membership {
@@ -193,6 +213,21 @@
         public function promoteMembershipPermission(int $id, RolePermission $rP): bool {
             $isSuccess = ($this->repo)->promotePermission($id, $rP);
             return $isSuccess;
+        }
+
+        public function findByRole(RoleTitle $title): array {
+            $roleIDs = $this->getAllFromColumn(["role_ID"]);
+            $roleIDs = array_map(
+                fn ($row) => (int)$row, $roleIDs
+            );
+            $equivalent = [];
+            for ($i = 0; $i < count($roleIDs); $i++) {
+                $curr = ($this->repo)->findByID($roleIDs[$i]);
+                if ($curr->getTitle() === $title) {
+                    $equivalent[] = $curr;
+                }
+            }
+            return $equivalent;
         }
     }
 ?>

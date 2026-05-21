@@ -133,6 +133,38 @@
         public function setTableName(string $name): void {
             $this->tableName = $name;
         }
+
+        public function getLatestID(): int {
+            $id = $this->dbConnection->lastInsertId();
+            return $id;
+        }
+
+        public function getAllFromColumn(array $cols): array {
+            $bindCols = implode(' , ', array_map(function ($x) {return ":{$x}";}, $cols));
+            $query = "select {$bindCols} from {$this->tableName}";
+            $params = [];
+            for ($i = 0; $i < count($cols); $i++) {
+                $params[":{$cols[$i]}"] = $cols[$i];
+            }
+            $stmt = ($this->dbConnection)->prepare($query);
+            $stmt->execute($params);
+            $all = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $all;
+        }
+
+        abstract protected function hydrate(array $row): object;
+
+        public function isExist(int $id): bool {
+            $params = ["ID" => $id];
+            $key = array_keys($params);
+            $bindKey = ":{$key[0]}";
+            $bindParams = [$bindKey => $id];
+            $query = "select * from {$this->tableName} where {$key[0]} = {$bindKey}";
+            $stmt = ($this->dbConnection)->prepare($query);
+            $stmt->execute($bindParams);
+            $all = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return count($all) > 0 ? true : false;
+        }
     }
 
     abstract class BaseModel {

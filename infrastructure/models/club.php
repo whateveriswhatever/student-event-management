@@ -8,14 +8,14 @@
     };
 
     class Club extends BaseModel {
-        private int $ID;
+        private ?int $ID;
         private string $name;
         private string $description;
         private DateTime $foundedDate;
         private string $logoURL;
-        private string $status;
+        private Status $status;
 
-        public function __construct(int $id, string $n, string $d, DateTime $fd, string $url, Status $s) {
+        public function __construct(string $n, string $d, DateTime $fd, string $url, Status $s, ?int $id = null) {
             $this->setName($n);
             $this->setDescription($d);
             $this->setFoundedDate($fd);
@@ -25,7 +25,7 @@
         }
 
         private function setID(int $id): void {
-            if ($id < 1) throw new InvalidArgumentException("Invalid ID");
+            if ($id < 1 && $id === null) throw new InvalidArgumentException("Invalid ID");
             $this->ID = $id;
         }
 
@@ -72,14 +72,15 @@
         }
 
         private function setStatus(Status $s): void {
-            $this->status = $s->value;
+            $this->status = $s;
         }
 
+        public function getID(): int {return $this->ID;}
         public function getName(): string {return $this->name;}
         public function getDescription(): string {return $this->description;}
         public function getFoundedDate(): DateTime {return $this->foundedDate;}
         public function getLogoURL(): string {return $this->logoURL;}
-        public function getStatus(): string {return $this->status;}
+        public function getStatus(): Status {return $this->status;}
     }
 
     class ClubRepository extends BaseRepository {
@@ -87,9 +88,20 @@
             parent::__construct("club");
         }
 
-        public function findByStatus(Status $s): array {
-            $data = $this->findViaCriteria(["status" => $s->value]);
-            return $data;
+        public function create(string $n, string $d, DateTime $fd, string $url, Status $s): ?Club {
+            $x = new Club($n, $d, $fd, $url, $s);
+            $isSuccess = $this->add([
+                "name" => $x->getName(),
+                "description" => $x->getDescription(),
+                "founded_date" => ($x->getFoundedDate())->format("Y-m-d H:i:s"),
+                "status" => ($x->getStatus())->value
+                ]);
+            if ($isSuccess) {
+                $generatedID = $this->getLatestID();
+                return new Club ($n, $d, $fd, $url, $s, $generatedID);
+            } else {
+                return null;
+            }
         }
 
         public function findByName(string $n): ?Club {
@@ -105,6 +117,42 @@
                 $row["founded_date"],
                 $row["logo_url"],
                 $row["status"]);
+        }
+
+        public function save(Club $c): bool {
+            if ($c === null) return false;
+            return $this->updateViaCriteria([
+                "name" => $c->getName(),
+                "description" => $c->getDescription(),
+                "founded_date" => $c->getFoundedDate(),
+                "logo_url" => $c->getLogoURL(),
+                "status" => $c->getStatus()
+            ], ["ID" => $c->getID()]);
+        }
+
+        protected function hydrate(array $row): Club {
+            if (empty($row)) throw new RuntimeException("Empty row!");
+            try {
+                $fD = new DateTime($row["founded_at"]);
+            } catch (PDOException $ex) {
+                throw new RuntimeException("Invalid founded date!");
+            }
+            $club = new Club(
+                (string)$row["name"],
+                (string)$row["description"],
+                new DateTime($row["founded_date"]),
+                (string)$row["logo_url"],
+                Status::from($row["status"])
+            );
+            return $club;
+        }
+
+        public function findByStatus(Status $s): array {
+            $detail = $s->value;
+            $all = $this->findViaCriteria(["status" => $detail]);
+            return array_map(
+                fn ($each) => $this->hydrate($each), $all 
+            );
         }
     }
 ?>

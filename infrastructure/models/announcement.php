@@ -85,5 +85,17 @@
             if (empty($data)) return [];
             return $data;
         }
+
+        #[Override]
+        protected function hydrate(array $row): Announcement
+        {
+            return new Announcement(
+                (int)$row["ID"],
+                (int)$row["club_ID"],
+                (int)$row["author_ID"],
+                (string)$row["title"],
+                (string)$row["description"]
+            );
+        }
     }
 ?>

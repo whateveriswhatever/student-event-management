@@ -15,7 +15,10 @@
         private AttendanceStatus $status;
 
         public function __construct(int $rID, DateTime $cT, AttendanceStatus $s, ?int $id = null) {
-
+            $this->setID($id);
+            $this->setRegisteredID($rID);
+            $this->setCheckinTime($cT);
+            $this->setAttendanceStatus($s);
         }
 
         private function setID(int $id): void {
@@ -42,7 +45,91 @@
 
     class AttendanceRepository extends BaseRepository {
         public function __construct() {
-            parent::__construct()
+            parent::__construct("attendance");
+        }
+
+        public function create(int $rID, DateTime $cT, AttendanceStatus $s): ?Attendance {
+            $attendance = new Attendance(
+                $rID,
+                $cT,
+                $s
+            );
+            $isSuccess = $this->add([
+                "registration_ID" => (int)$attendance->getRegisteredID(),
+                "check_in_time" => $attendance->getCheckinTime()->format("Y-m-d H:i:s"),
+                "attendance_status" => ($attendance->getStatus())->value
+            ]);
+
+            if (!$isSuccess) throw new RuntimeException("Failed to create a new attendance!");
+            $generatedID = $this->getLatestID();
+            return new Attendance (
+                $rID,
+                $cT,
+                $s, 
+                $generatedID
+            );
+        }
+
+        public function hydrate(array $row): Attendance {
+            if (empty($row)) throw new RuntimeException("Empty rows!");
+            try {
+                $checkinTime = new DateTime($row["check_in_time"]);
+            } catch (Exception $ex) {
+                throw new RuntimeException("Invalid check_in_time");
+            } 
+            return new Attendance(
+                (int)$row["registration_ID"],
+                $checkinTime,
+                AttendanceStatus::from($row["attendance_status"])
+            );
+        }
+
+        public function getAllCheckin(): array {
+            $rows = $this->findViaCriteria(["attendance_status" => (AttendanceStatus::CHECKIN)->value]);
+            try {
+                return array_map(
+                    fn ($each) => $this->hydrate($each), $rows
+                );
+            } catch (RuntimeException $ex) {
+                error_log($ex->getMessage());
+                throw $ex;
+            }
+        }
+
+        public function getAllCheckout(): array {
+            $rows = $this->findViaCriteria(["attendance_status" => (AttendanceStatus::CHECKOUT)->value]);
+            try {
+                return array_map(
+                    fn ($each) => $this->hydrate($each), $rows
+                );
+            } catch (RuntimeException $ex) {
+                error_log($ex->getMessage());
+                throw $ex;
+            }
+        }
+
+        public function getAllVoid(): array {
+            $rows = $this->findViaCriteria(["attendance_status" => (AttendanceStatus::VOID)->value]);
+            try {
+                return array_map(
+                    fn ($each) => $this->hydrate($each), $rows
+                );
+            } catch (RuntimeException $ex) {
+                error_log($ex->getMessage());
+                throw $ex;
+            }
+        }
+
+        public function findByTimestamp(AttendanceStatus $s, DateTime $tl): array {
+            $all = $this->findViaCriteria([
+                "attendance_status" => $s->value,
+                "check_in_time" => $tl->format("Y-m-d H:i:s")
+            ]);
+
+            $instances = array_map(
+                fn ($each) => $this->hydrate($each), $all
+            );
+            return $instances;
         }
     }
 ?>

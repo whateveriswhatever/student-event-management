@@ -22,23 +22,23 @@
         private string $title;
         private string $description;
         private DateTime $eventDate;
-        private string $startTime;
-        private string $endTime;
+        private DateTime $startTime;
+        private DateTime $endTime;
         private int $locationID;
         private int $maxParticipants;
-        private string $status = EventStatus::VOID->value;
+        private EventStatus $status;
 
         public function __construct(
-            ?int $ID = null,
             int $cID,
             string $t,
             string $d,
             DateTime $eD,
-            string $sT,
-            string $eT,
+            DateTime $sT,
+            DateTime $eT,
             int $lID,
             int $mP,
-            ?string $s = null
+            ?EventStatus $s = null,
+            ?int $ID = null,
         ) {
             $this->ID = $ID;
             $this->setClubID($cID);
@@ -75,17 +75,20 @@
             $this->eventDate = $eD;
         }
 
-        private function setStartTime(string $sT): void {
-            $isValidated = $this->isValidTime($sT);
-            if (!$isValidated) throw new InvalidArgumentException("Invalid time format!");
-            $this->startTime = $sT;
+        private function setStartTime(DateTime $sT): void {
+            if ($this->getEndTime() !== null) {
+                if ($sT > $this->getEndTime()) throw new RuntimeException("Invalid time!");
+                $this->startTime = $sT;
+            } else {
+                $this->startTime = $sT;
+            }
         }
 
-        private function setEndTime(string $eT): void {
-            $isValidated = $this->isValidTime($eT);
-            if (!$isValidated) throw new InvalidArgumentException("Invalid time format!");
-            $startTime = $this->getStartTime();
-            if ($startTime >= $eT) throw new InvalidArgumentException("Ending time period must be greater than starting time period!");
+        private function setEndTime(DateTime $eT): void {
+            if ($this->getStartTime() !== null) {
+                if ($eT < $this->getEndTime()) throw new RuntimeException("Invalid time!");
+                $this->endTime = $eT;
+            }
             $this->endTime = $eT;
         }
 
@@ -100,34 +103,23 @@
         }
 
         private function closeEvent(): void {
-            $this->status = (EventStatus::CLOSED)->value;
+            $this->status = EventStatus::CLOSED;
         }
 
         private function pendingEvent(): void {
-            $this->status = (EventStatus::PENDING)->value;
+            $this->status = EventStatus::PENDING;
         }
 
         private function openEvent(): void {
-            $this->status = (EventStatus::OPEN)->value;
+            $this->status = EventStatus::OPEN;
         }
 
-        public function setStatus(string $case): void {
-            // void by default 
-            switch ($case) {
-                case "open":
-                    $this->openEvent();
-                    break;
-                case "closed":
-                    $this->closeEvent();
-                    break;
-                case "pending":
-                    $this->pendingEvent();
-                    break;
-                default:
-                    $this->status = (EventStatus::VOID)->value;
-                    break;
+        public function setStatus(EventStatus $x): void {
+            if ($x === null) {
+                $this->status = EventStatus::VOID;
+            } else {
+                $this->status = $x;
             }
-
         }
 
         public function getID(): ?int {
@@ -150,11 +142,11 @@
             return $this->eventDate;
         }
 
-        public function getStartTime(): string {
+        public function getStartTime(): DateTime {
             return $this->startTime;
         }
 
-        public function getEndTime(): string {
+        public function getEndTime(): DateTime {
             return $this->endTime;
         }
 
@@ -166,7 +158,7 @@
             return $this->maxParticipants;
         }
 
-        public function getStatus(): string {
+        public function getStatus(): EventStatus {
             return $this->status;
         }
     }
@@ -177,19 +169,18 @@
         }
 
         public function create(
-            int $clubID,
+            int $cID,
             string $t,
             string $d,
             DateTime $eD,
-            string $sT,
-            string $eT,
+            DateTime $sT,
+            DateTime $eT,
             int $lID,
             int $mP,
-            string $s
+            EventStatus $s
         ): Event {
             $event = new Event(
-                null,
-                $clubID,
+                $cID,
                 $t,
                 $d, 
                 $eD,
@@ -208,15 +199,14 @@
                 "end_time" => $event->getEndTime(),
                 "location_ID" => $event->getLocationID(),
                 "max_participants" => $event->getMaxParticipants(),
-                "status" => $event->getStatus()
+                "status" => ($event->getStatus())->value
             ]);
 
             if (!$isSuccess) throw new RuntimeException("Failed to create event");
 
             $generatedID = (int)$this->dbConnection->lastInsertId();
             return new Event(
-                $generatedID,
-                $clubID,
+                $cID,
                 $t,
                 $d,
                 $eD,
@@ -224,7 +214,8 @@
                 $eT,
                 $lID,
                 $mP,
-                $s
+                $s,
+                $generatedID
             );
         }
 
@@ -245,7 +236,33 @@
             return $this->updateViaCriteria(["status" => $s], ["ID" => $eID]);
         }
 
+        #[Override]
+        protected function hydrate(array $row): Event {
+            if (empty($row)) throw new RuntimeException("Empty row!");
 
+            try {
+                $eD = new DateTime($row["event_date"]);
+                $sT = new DateTime($row["start_time"]);
+                $eT = new DateTime($row["end_time"]);
+
+                $event = new Event(
+                    (int)$row["club_id"],
+                    (string)$row["title"],
+                    (string)$row["description"],
+                    $eD,
+                    $sT,
+                    $eT,
+                    (int)$row["location_ID"],
+                    (int)$row["max_participants"],
+                    EventStatus::from($row["status"]),
+                    (int)$row["ID"]
+                );
+                return $event;
+            } catch (PDOException $ex) {
+                error_log($ex->getMessage());
+                throw new RuntimeException("Invalid founded date!");
+            }
+        }
     }
 
     class EventRegistration {
@@ -253,9 +270,9 @@
         private int $eventID;
         private int $studentID;
         private DateTime $registeredAt;
-        private string $status;
+        private RegisteredStatus $status;
 
-        public function __construct(?int $id = null, int $eID, int $sID, DateTime $rdAt, ?string $s = null) {
+        public function __construct(int $eID, int $sID, DateTime $rdAt, ?RegisteredStatus $s = null, ?int $id = null) {
             $this->ID = $id;
             $this->setEventID($eID);
             $this->setStudentID($sID);
@@ -278,31 +295,37 @@
         }
 
         private function markSuccess(): void {
-            $this->status = (RegisteredStatus::SUCCESS)->value;
+            $this->status = RegisteredStatus::SUCCESS;
         }
 
         private function markPending(): void {
-            $this->status = (RegisteredStatus::PENDING)->value;
+            $this->status = RegisteredStatus::PENDING;
         }
 
         private function markReject(): void {
-            $this->status = (RegisteredStatus::REJECT)->value;
+            $this->status = RegisteredStatus::REJECT;
         }
 
-        public function setStatus(string $s): void {
-            switch ($s) {
-                case "success":
-                    $this->markSuccess();
-                    break;
-                case "pending":
-                    $this->markPending();
-                    break;
-                case "reject":
-                    $this->markReject();
-                    break;
-                default:
-                    $this->markPending();
-                    break;
+        public function setStatus(?RegisteredStatus $s, ?string $typeMarking = null): void {
+            if (($typeMarking || $typeMarking !== null) && ($s === null || !$s)) {
+                switch ($s) {
+                    case "success":
+                        $this->markSuccess();
+                        break;
+                    case "pending":
+                        $this->markPending();
+                        break;
+                    case "reject":
+                        $this->markReject();
+                        break;
+                    default:
+                        $this->markPending();
+                        break;
+                }
+            }
+
+            if ((!$typeMarking || $typeMarking === null) && ($s || $s !== null)) {
+                $this->status = $s;
             }
         }
 
@@ -310,7 +333,7 @@
         public function getEventID(): int {return $this->eventID;}
         public function getStudentID(): int {return $this->studentID;}
         public function getRegisteredAt(): DateTime {return $this->registeredAt;}
-        public function getStatus(): string {return $this->status;}
+        public function getStatus(): RegisteredStatus {return $this->status;}
     }
 
    
@@ -322,7 +345,6 @@
 
         public function register(int $eID, int $sID, DateTime $rdAt, ?string $s = null): EventRegistration {
             $registration = new EventRegistration(
-                null,
                 $eID,
                 $sID,
                 $rdAt,
@@ -341,11 +363,11 @@
 
             $generatedID = (int)$this->dbConnection->lastInsertId();
             return new EventRegistration(
-                $generatedID,
                 $eID,
                 $sID,
                 $rdAt,
-                $s
+                $s,
+                $generatedID
             );
         }
 
@@ -356,10 +378,31 @@
             );
         }
 
+        
         public function updateRegistrationStatus(int $rID, RegisteredStatus $s): bool {
             return $this->updateViaCriteria([
                 "registration_status" => $s->value
             ], ["ID" => $rID]);
+        }
+
+        protected function hydrate(array $row): EventRegistration {
+            if (empty($row)) throw new RuntimeException("Empty row!");
+
+            try {
+                $rA = new DateTime($row["registered_at"]);
+                $status = RegisteredStatus::from($row["registration_status"]);
+
+                $event = new EventRegistration(
+                    (int)$row["event_ID"],
+                    (int)$row["student_ID"],
+                    $rA,
+                    $status
+                );
+                return $event;
+            } catch (PDOException $ex) {
+                error_log($ex->getMessage());
+                throw new RuntimeException("Invalid founded date!");
+            }
         }
     }
 ?>
