@@ -119,6 +119,16 @@
             return $isSuccess;
             
         }
+
+        #[Override]
+        public function hydrate(array $row): Profile
+        {
+            return new Profile(
+                (string)$row["student_ID"],
+                (string)$row["major"],
+                DegreeType::from((string)$row["degree"])
+            );
+        }
     }
 
     

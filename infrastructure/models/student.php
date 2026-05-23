@@ -15,11 +15,12 @@
     class Student {
         private string $name;
         private string $ID;
+        private int $age;
         private string $phoneNumber;
         private string $email;
         private int $profileID;
 
-        public function __construct(string $id, string $f, string $l,string $pn, string $e, int $pID ) {
+        public function __construct(string $id, string $f, string $l, int $a, string $pn, string $e, int $pID ) {
             $this->setName($f, $l);
             $this->setID($id);
             $this->setPhoneNumber($pn);
@@ -60,7 +61,10 @@
             $this->name = $n;
         }
 
-       
+       private function setAge(int $a): void {
+            if ($a < 12) throw new InvalidArgumentExeception("Invalid value for a college student age!");
+            $this->age = $a; 
+       }
 
         private function setID(string $id): void {
             $checkLength = function ($x): bool {return strlen($x) === 8 ? true : false;};
@@ -138,7 +142,7 @@
         public function getEmail(): string {return $this->email;}
         public function getID(): string {return $this->ID;}
         public function getProfileID(): int {return $this->profileID;}
-
+        public function getAge(): int {return $this->age;}
     }
 
     class StudentRepository extends BaseRepository {
@@ -151,18 +155,26 @@
             if (empty($data)) return null;
 
             $row = $data[0];
-            return new Student(
-                $row["ID"],
-                $row["firstname"],
-                $row["lastname"],
-                $row["email"],
-                $row["phone"],
-                $row["profile_ID"]
-            );
+            $student = $this->hydrate($row);
+            return $student;
         }
 
         public function save(Student $s): bool {
             return $this->updateViaCriteria(["email" => $s->getEmail()], ["ID" => $s->getID()]);
+        }
+
+        #[Override]
+        public function hydrate(array $row): object
+        {
+            return new Student(
+                (string)$row["ID"],
+                (string)$row["fristname"],
+                (string)$row["lastname"],
+                (int)$row["age"],
+                (string)$row["phone_number"],
+                (string)$row["email"],
+                (int)$row["profile_ID"]
+            );
         }
     }
 

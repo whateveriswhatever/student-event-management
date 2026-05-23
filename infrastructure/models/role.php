@@ -78,7 +78,7 @@
             return $isSuccess;
         }
 
-        private function hydrate(array $row): Role {
+        protected function hydrate(array $row): Role {
             return new Role(
                 RoleTitle::from($row["role_title"]),
                 RolePermission::from($row["permission"]),
@@ -86,7 +86,7 @@
             );
         }
         
-        private function findByID(int $id): ?Role {
+        public function findByID(int $id): ?Role {
             $res = $this->findViaCriteria(["ID" => $id]);
             if (empty($res)) return null;
             return $this->hydrate($res[0]);
