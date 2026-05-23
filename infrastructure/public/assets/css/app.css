@@ -295,6 +295,10 @@ h3 {
     gap: 12px;
 }
 
+.topbar-actions {
+    position: relative;
+}
+
 .icon-button {
     position: relative;
     width: 42px;
@@ -308,12 +312,14 @@ h3 {
     transition: background 180ms ease, color 180ms ease;
 }
 
-.icon-button::before {
-    content: "";
-    width: 16px;
-    height: 17px;
-    border: 2px solid currentColor;
-    border-radius: 8px 8px 5px 5px;
+.icon-button svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .icon-button:hover {
@@ -338,8 +344,29 @@ h3 {
     background: var(--line);
 }
 
+.account-wrap {
+    position: relative;
+}
+
 .account-chip {
     min-width: 0;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--ink);
+    padding: 4px 0 4px 10px;
+    transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.account-chip:hover,
+.account-chip[aria-expanded="true"] {
+    background: #f3f4f6;
+}
+
+.account-chip:focus-visible,
+.icon-button:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
 }
 
 .account-chip div {
@@ -358,6 +385,197 @@ h3 {
 .account-chip small {
     color: var(--muted);
     font-size: 12px;
+}
+
+.admin-popover {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: 0;
+    z-index: 20;
+    width: min(420px, calc(100vw - 32px));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #ffffff;
+    box-shadow: 0 24px 70px rgba(17, 24, 39, 0.18);
+    padding: 20px;
+    transform-origin: top right;
+    animation: popover-in 180ms ease both;
+}
+
+.admin-popover[hidden] {
+    display: none;
+}
+
+.admin-popover::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 24px;
+    width: 14px;
+    height: 14px;
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    background: #ffffff;
+    transform: rotate(45deg);
+}
+
+.admin-profile-head {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.admin-avatar {
+    width: 76px;
+    height: 76px;
+    font-size: 30px;
+    box-shadow: 0 16px 34px rgba(56, 189, 248, 0.28);
+}
+
+.admin-profile-head strong,
+.admin-profile-head small {
+    display: block;
+}
+
+.admin-profile-head strong {
+    font-size: 22px;
+}
+
+.admin-profile-head small {
+    margin-top: 4px;
+    color: var(--muted-2);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+.admin-status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.admin-status-grid article {
+    min-width: 0;
+    border-radius: var(--radius);
+    background: #f8f9fa;
+    padding: 12px;
+}
+
+.admin-status-grid span,
+.admin-info-list dt {
+    display: block;
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.admin-status-grid strong {
+    display: block;
+    margin-top: 6px;
+    overflow: hidden;
+    color: var(--ink);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.verified-status {
+    color: #16a34a !important;
+}
+
+.admin-info-list {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.admin-info-list div {
+    min-width: 0;
+    border-radius: var(--radius);
+    background: #f8f9fa;
+    padding: 12px;
+}
+
+.admin-info-list dd {
+    margin: 8px 0 0;
+    overflow: hidden;
+    color: var(--ink);
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-action {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 16px;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--panel);
+    color: #ffffff;
+    font-weight: 900;
+    transition: background 180ms ease, transform 180ms ease;
+}
+
+.admin-action:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+}
+
+.admin-db-status {
+    margin-top: 14px;
+    border-radius: var(--radius);
+    padding: 12px;
+    background: #f8f9fa;
+}
+
+.admin-db-status span,
+.admin-db-status small {
+    display: block;
+}
+
+.admin-db-status span {
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.admin-db-status strong {
+    display: block;
+    margin-top: 6px;
+    color: var(--ink);
+    font-size: 15px;
+}
+
+.admin-db-status small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.admin-db-status.connected {
+    background: #ecfdf5;
+}
+
+.admin-db-status.connected strong {
+    color: #15803d;
+}
+
+.admin-db-status.offline {
+    background: #fff7ed;
+}
+
+.admin-db-status.offline strong {
+    color: #c2410c;
 }
 
 .content-scroll {
@@ -981,6 +1199,91 @@ h3 {
     font-size: 20px;
 }
 
+.role-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.db-pill {
+    border-radius: 999px;
+    padding: 6px 9px;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.db-pill.connected {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.db-pill.offline {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.db-message {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.role-list {
+    display: grid;
+    gap: 8px;
+}
+
+.role-row {
+    min-width: 0;
+    min-height: 56px;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    border-radius: var(--radius);
+    background: #f8f9fa;
+    padding: 10px;
+}
+
+.role-row > span {
+    color: var(--accent-dark);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.role-row strong,
+.role-row small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.role-row small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.role-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.role-summary span {
+    border-radius: 999px;
+    background: #eef2f7;
+    color: var(--muted);
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 900;
+}
+
 .event-command {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 380px;
@@ -1416,6 +1719,17 @@ h3 {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes popover-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 }
 
