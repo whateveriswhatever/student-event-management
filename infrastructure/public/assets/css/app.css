@@ -1457,27 +1457,39 @@ h3 {
 
 .event-management-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: 18px;
     align-items: start;
 }
 
 .event-table-panel {
     min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
     padding: 20px;
+}
+
+.event-table-panel > .section-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 .event-table {
     display: grid;
     gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: visible;
+    overflow-y: visible;
 }
 
 .event-table-head,
 .event-table-row {
     display: grid;
-    grid-template-columns: minmax(220px, 1.5fr) 150px 180px 128px 112px;
-    gap: 14px;
+    grid-template-columns: minmax(180px, 1.35fr) minmax(92px, 0.54fr) minmax(132px, 0.9fr) minmax(92px, 0.52fr) minmax(96px, 0.48fr);
+    gap: 10px;
     align-items: center;
+    min-width: 0;
 }
 
 .event-table-head {
@@ -1495,9 +1507,18 @@ h3 {
     border-radius: var(--radius);
     background: transparent;
     color: var(--ink);
-    padding: 12px 14px;
+    padding: 12px 10px;
     text-align: left;
     transition: background 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.event-table-row:focus {
+    outline: 0;
+}
+
+.event-table-row:focus-visible {
+    border-color: rgba(56, 189, 248, 0.7);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16);
 }
 
 .event-table-row.selected {
@@ -1613,11 +1634,13 @@ h3 {
     overflow: hidden;
     display: grid;
     grid-template-rows: 132px minmax(0, 1fr);
+    min-height: 520px;
     transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .club-cover {
     position: relative;
+    isolation: isolate;
     background: color-mix(in srgb, var(--tone) 14%, #f3f4f6);
 }
 
@@ -1625,6 +1648,7 @@ h3 {
     content: "";
     position: absolute;
     inset: auto 0 0;
+    z-index: 0;
     height: 3px;
     background: var(--tone);
 }
@@ -1644,12 +1668,14 @@ h3 {
     box-shadow: 0 14px 28px rgba(17, 24, 39, 0.12);
     font-size: 22px;
     font-weight: 900;
+    z-index: 2;
 }
 
 .club-cover small {
     position: absolute;
     top: 16px;
     right: 16px;
+    z-index: 2;
     border-radius: 999px;
     padding: 6px 9px;
     font-size: 11px;
@@ -1659,6 +1685,7 @@ h3 {
 .club-card-body {
     padding: 44px 22px 22px;
     display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     gap: 14px;
 }
 
@@ -1695,6 +1722,7 @@ h3 {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    align-self: end;
     padding-top: 12px;
     border-top: 1px solid var(--line);
 }
