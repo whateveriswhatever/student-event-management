@@ -19,13 +19,16 @@
         private string $phoneNumber;
         private string $email;
         private int $profileID;
+        private string $password;
 
-        public function __construct(string $id, string $f, string $l, int $a, string $pn, string $e, int $pID ) {
+        public function __construct(string $id, string $f, string $l, int $a, string $pn, string $e, int $pID, string $p ) {
             $this->setName($f, $l);
             $this->setID($id);
             $this->setPhoneNumber($pn);
             $this->setEmail($e);
             $this->setProfileID($pID);
+            $this->setAge($a);
+            $this->setPassword($p);
         }
 
         private function doesContainSpecialChars(string $str): bool {
@@ -62,7 +65,7 @@
         }
 
        private function setAge(int $a): void {
-            if ($a < 12) throw new InvalidArgumentExeception("Invalid value for a college student age!");
+            if ($a < 12) throw new InvalidArgumentException("Invalid value for a college student age!");
             $this->age = $a; 
        }
 
@@ -137,12 +140,51 @@
             $this->profileID = $id;
         }
 
+        private function setPassword(string $p): void {
+            /*
+            // at least 1 digit number, 1 special character, one uppercase letter, minimum length of 12
+            // no blank space
+            if (strlen($p) < 12) throw new InvalidArgumentException("Minimum length for the password is 12!");
+            $isSpecialChar = function ($c): bool {
+                return preg_match("/[^a-zA-Z0-9]/", $c) === 1;
+            };
+            $init = 0;
+            $isDigit = 1;   // 0001 -> 1 
+            $isUpper = 2;   // 0010 -> 2
+            $isSpecial = 4; // 0100 -> 4
+
+            $satisfied = $isDigit | $isUpper | $isSpecial;  // 0111 = 7
+            for ($i = 0; $i < strlen($p); $i++) {
+                $curr = $p[$i];
+                if (ctype_digit($curr)) $init |= $isDigit;
+                if (ctype_upper($curr)) $init |= $isUpper;
+                if (ctype_space($curr)) throw new InvalidArgumentException("Password can not contain whitespace!");
+                if ($isSpecialChar($curr)) $init |= $isSpecial;
+            }
+            if ($init === $satisfied) $this->password = $p;
+            else throw new InvalidArgumentException("Invalid password! The password must have at least 1 digit number, 1 special character. 1 uppercase letter!");
+            */
+            // The validation process for password will be conducted at frontend side
+            $this->password = $p;
+        }
+
         public function getName(): string {return $this->name;}
         public function getPhoneNumber(): string {return $this->phoneNumber;}
         public function getEmail(): string {return $this->email;}
         public function getID(): string {return $this->ID;}
         public function getProfileID(): int {return $this->profileID;}
         public function getAge(): int {return $this->age;}
+        public function getPassword(): string {return $this->password;}
+        public function getFirstname(): string {
+            $full = $this->getName();
+            $parts = explode(' ', $full);
+            return $parts[0];
+        }
+        public function getLastname(): string {
+            $full = $this->getName();
+            $parts = explode(' ', $full);
+            return $parts[1];
+        }
     }
 
     class StudentRepository extends BaseRepository {
@@ -163,6 +205,56 @@
             return $this->updateViaCriteria(["email" => $s->getEmail()], ["ID" => $s->getID()]);
         }
 
+        public function create(
+            string $id, 
+            string $f, 
+            string $l, 
+            int $a, 
+            string $pn, 
+            string $e, 
+            int $pID, 
+            string $p): ?Student {
+            $student = new Student($id, $f, $l, $a, $pn, $e, $pID, $p);
+            // hashing the user password using bcrypt to avoid security fraud
+            $hashedPassword = password_hash($p, PASSWORD_BCRYPT);
+            $isSuccess = $this->add([
+                "ID" => $student->getID(), 
+                "firstname" => $student->getFirstname(),
+                "lastname" => $student->getLastname(), 
+                "age" => $a, 
+                "phone_number" => $student->getPhoneNumber(),
+                "profile_ID" => $student->getProfileID(),
+                "password" => $hashedPassword
+            ]);
+            if ($isSuccess) {
+                return new Student(
+                    (string)$student->getID(),
+                    (string)$student->getFirstname(),
+                    (string)$student->getLastname(),
+                    (int)$student->getAge(),
+                    (string)$student->getPhoneNumber(),
+                    (string)$student->getEmail(),
+                    (int)$student->getProfileID(),
+                    (string)$hashedPassword
+                );
+            } else {
+                throw new RuntimeException("Failed to create a new student! Re-checking student information to meet up constraints!");
+            }
+        }
+
+        public function login(string $id, string $password): bool {
+            // check if the student has registered before
+            $foundOne = $this->findByID($id);
+            if ($foundOne === null) throw new RuntimeException("This student with ID {$id} doesn't exist!");
+            $storedPassword = $foundOne->getPassword();
+            // verifying the password against the hash
+            if (password_verify($password, $storedPassword)) {
+                return true;
+            } else {
+                return false;
+            } 
+        }
+
         #[Override]
         public function hydrate(array $row): object
         {
@@ -173,7 +265,8 @@
                 (int)$row["age"],
                 (string)$row["phone_number"],
                 (string)$row["email"],
-                (int)$row["profile_ID"]
+                (int)$row["profile_ID"],
+                (string)$row["password"]
             );
         }
     }
