@@ -1,5 +1,6 @@
 drop database if exists student_club_and_event_management_platform;
 create database student_club_and_event_management_platform;
+use student_club_and_event_management_platform;
 
 drop table if exists Student;
 drop table if exists Profile;
@@ -74,7 +75,7 @@ create table Event (
     title varchar(200) not null,
     description varchar(500) not null,
     event_date datetime default current_timestamp,
-    start_time timestamp defualt current_timestamp,
+    start_time timestamp default current_timestamp,
     end_time timestamp default current_timestamp,
     location_ID int not null,
     max_participants int not null,

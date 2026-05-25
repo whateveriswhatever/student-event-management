@@ -20,6 +20,8 @@ const clubSearch = document.querySelector("#clubSearch");
 const clubFilterButtons = document.querySelectorAll("[data-club-filter]");
 const clubCards = document.querySelectorAll("[data-club-card]");
 const clubEmptyState = document.querySelector("#clubEmptyState");
+const adminProfileButton = document.querySelector("#adminProfileButton");
+const adminProfilePanel = document.querySelector("#adminProfilePanel");
 
 const statusLabels = {
     open: "Đang mở",
@@ -158,6 +160,21 @@ function setDetailText(selector, value) {
     }
 }
 
+function closeAdminProfile() {
+    adminProfilePanel?.setAttribute("hidden", "");
+    adminProfileButton?.setAttribute("aria-expanded", "false");
+}
+
+function toggleAdminProfile() {
+    if (!adminProfilePanel || !adminProfileButton) {
+        return;
+    }
+
+    const shouldOpen = adminProfilePanel.hasAttribute("hidden");
+    adminProfilePanel.toggleAttribute("hidden", !shouldOpen);
+    adminProfileButton.setAttribute("aria-expanded", String(shouldOpen));
+}
+
 function selectEventRow(row) {
     eventRows.forEach((item) => item.classList.remove("selected"));
     row.classList.add("selected");
@@ -228,6 +245,22 @@ clubFilterButtons.forEach((button) => {
         button.classList.add("active");
         applyClubFilters();
     });
+});
+
+adminProfileButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleAdminProfile();
+});
+
+adminProfilePanel?.addEventListener("click", (event) => {
+    event.stopPropagation();
+});
+
+document.addEventListener("click", closeAdminProfile);
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeAdminProfile();
+    }
 });
 
 eventRows.forEach((row) => {

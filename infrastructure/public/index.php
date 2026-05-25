@@ -42,11 +42,243 @@ function initials(string $name): string
     return implode("", $letters);
 }
 
+function roleTitleLabel(string $value): string
+{
+    return match ($value) {
+        "president" => "Chủ nhiệm",
+        "vice president" => "Phó chủ nhiệm",
+        "secretary" => "Thư ký",
+        "member" => "Thành viên",
+        default => $value,
+    };
+}
+
+function permissionLabel(string $value): string
+{
+    return match ($value) {
+        "regular" => "Cơ bản",
+        "moderator" => "Điều phối",
+        "manager" => "Quản lý",
+        default => $value,
+    };
+}
+
+function appDatabaseConnection(): ?PDO
+{
+    static $connection = null;
+    static $attempted = false;
+
+    if ($attempted) {
+        return $connection;
+    }
+
+    $attempted = true;
+
+    try {
+        $envPath = root_dir . "/config/.env";
+        if (file_exists($envPath)) {
+            require_once root_dir . "/config/database-config.php";
+            $connection = DatabaseConfig::getInstance()->getConnection();
+            return $connection;
+        }
+
+        $host = getenv("DB_HOST") ?: "127.0.0.1";
+        $dbName = getenv("DB_NAME") ?: "student_club_and_event_management_platform";
+        $username = getenv("DB_USERNAME") ?: "root";
+        $password = getenv("DB_PASSWORD") ?: "";
+        $connection = new PDO(
+            "mysql:host={$host};dbname={$dbName};charset=utf8mb4",
+            $username,
+            $password,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]
+        );
+        return $connection;
+    } catch (Throwable $error) {
+        return null;
+    }
+}
+
+function fetchDatabaseRows(string $query, string $successMessage): array
+{
+    $connection = appDatabaseConnection();
+
+    if (!$connection) {
+        return [
+            "connected" => false,
+            "rows" => [],
+            "message" => "Không kết nối được database. Trang đang dùng dữ liệu giao diện tĩnh.",
+        ];
+    }
+
+    try {
+        $stmt = $connection->query($query);
+        return [
+            "connected" => true,
+            "rows" => $stmt->fetchAll(),
+            "message" => $successMessage,
+        ];
+    } catch (Throwable $error) {
+        return [
+            "connected" => false,
+            "rows" => [],
+            "message" => "Không đọc được dữ liệu. Kiểm tra MySQL, database hoặc tên bảng.",
+        ];
+    }
+}
+
+function fetchRoleTable(): array
+{
+    return fetchDatabaseRows(
+        "select ID, role_title, permission from Role order by ID",
+        "Đã kết nối bảng Role"
+    );
+}
+
+function fetchClubTable(): array
+{
+    return fetchDatabaseRows(
+        "select
+            c.ID,
+            c.name,
+            c.description,
+            c.founded_date,
+            c.logo_url,
+            c.status,
+            count(cm.ID) as members
+        from Club c
+        left join Club_Membership cm on cm.club_ID = c.ID
+        group by c.ID, c.name, c.description, c.founded_date, c.logo_url, c.status
+        order by c.name",
+        "Đã kết nối bảng Club"
+    );
+}
+
+function fetchLocationTable(): array
+{
+    return fetchDatabaseRows(
+        "select
+            l.ID,
+            l.building,
+            l.room,
+            l.attendance_capacity,
+            count(e.ID) as event_count
+        from Location l
+        left join Event e on e.location_ID = l.ID
+        group by l.ID, l.building, l.room, l.attendance_capacity
+        order by l.building, l.room",
+        "Đã kết nối bảng Location"
+    );
+}
+
+function fetchEventTable(): array
+{
+    return fetchDatabaseRows(
+        "select
+            e.ID,
+            e.title,
+            e.description,
+            e.event_date,
+            e.start_time,
+            e.end_time,
+            e.max_participants,
+            e.status,
+            coalesce(c.name, 'Chưa gắn CLB') as club_name,
+            coalesce(concat(l.building, ' - ', l.room), 'Chưa gắn phòng') as location_name,
+            count(er.ID) as registered
+        from Event e
+        left join Club c on c.ID = e.club_ID
+        left join Location l on l.ID = e.location_ID
+        left join Event_Registration er
+            on er.event_ID = e.ID
+            and (er.registration_status is null or er.registration_status <> 'rejected')
+        group by
+            e.ID,
+            e.title,
+            e.description,
+            e.event_date,
+            e.start_time,
+            e.end_time,
+            e.max_participants,
+            e.status,
+            c.name,
+            l.building,
+            l.room
+        order by e.event_date, e.start_time",
+        "Đã kết nối bảng Event"
+    );
+}
+
+function fetchRegistrationTable(): array
+{
+    return fetchDatabaseRows(
+        "select
+            er.ID,
+            er.student_ID,
+            er.registered_at,
+            er.registration_status,
+            coalesce(e.title, 'Sự kiện không xác định') as event_title
+        from Event_Registration er
+        left join Event e on e.ID = er.event_ID
+        order by er.registered_at desc
+        limit 6",
+        "Đã kết nối bảng Event_Registration"
+    );
+}
+
+function formatDbDate(?string $value): string
+{
+    if (!$value) {
+        return "-- ---";
+    }
+
+    try {
+        $date = new DateTime($value);
+        return $date->format("d") . " Th" . $date->format("m");
+    } catch (Throwable $error) {
+        return "-- ---";
+    }
+}
+
+function formatDbTime(?string $value): string
+{
+    if (!$value) {
+        return "--:--";
+    }
+
+    try {
+        return (new DateTime($value))->format("H:i");
+    } catch (Throwable $error) {
+        return "--:--";
+    }
+}
+
+function toneAt(int $index): string
+{
+    $tones = ["sky", "violet", "amber", "green", "rose"];
+    return $tones[$index % count($tones)];
+}
+
 $stats = [
     ["label" => "CLB hoạt động", "value" => "32", "trend" => "+2 tháng này", "tone" => "sky"],
     ["label" => "Sự kiện sắp tới", "value" => "18", "trend" => "6 sự kiện trên 75%", "tone" => "violet"],
     ["label" => "Sinh viên đăng ký", "value" => "1.248", "trend" => "+12% so với tháng trước", "tone" => "amber"],
     ["label" => "Tỉ lệ check-in", "value" => "86%", "trend" => "+8% sau QR", "tone" => "green"],
+];
+
+$adminProfile = [
+    "firstName" => "Khánh",
+    "lastName" => "Bes",
+    "role" => "Admin",
+    "initials" => "K",
+    "studentId" => "#CMS_K58JUT",
+    "status" => "Verified",
+    "phone" => "Chưa cập nhật",
+    "major" => "Kỹ thuật Phần mềm",
+    "degree" => "Undergraduate",
+    "class" => "SE16O1",
 ];
 
 $events = [
@@ -217,6 +449,103 @@ $rooms = [
     ["name" => "Innovation Hub", "usage" => "52%", "note" => "Chờ duyệt thiết bị"],
 ];
 
+$roleData = fetchRoleTable();
+$roleRows = $roleData["rows"];
+$rolePermissions = array_count_values(array_map(fn($role) => $role["permission"] ?? "unknown", $roleRows));
+
+$clubData = fetchClubTable();
+if ($clubData["connected"] && !empty($clubData["rows"])) {
+    $clubs = array_map(
+        fn($club, $index) => [
+            "name" => $club["name"],
+            "members" => (int) $club["members"],
+            "status" => $club["status"] ?: "active",
+            "focus" => "Database Club",
+            "founded" => $club["founded_date"] ? (new DateTime($club["founded_date"]))->format("Y") : "N/A",
+            "description" => $club["description"],
+            "tone" => toneAt($index),
+        ],
+        $clubData["rows"],
+        array_keys($clubData["rows"])
+    );
+}
+
+$locationData = fetchLocationTable();
+if ($locationData["connected"] && !empty($locationData["rows"])) {
+    $rooms = array_map(
+        fn($room) => [
+            "name" => trim($room["building"] . " - " . $room["room"], " -"),
+            "usage" => (string) $room["attendance_capacity"] . " chỗ",
+            "note" => (string) $room["event_count"] . " sự kiện đã gắn",
+        ],
+        $locationData["rows"]
+    );
+}
+
+$eventImages = [
+    "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=900&q=80",
+    "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80",
+];
+
+$eventData = fetchEventTable();
+if ($eventData["connected"] && !empty($eventData["rows"])) {
+    $events = array_map(
+        function ($event, $index) use ($eventImages): array {
+            $start = formatDbTime($event["start_time"] ?? null);
+            $end = formatDbTime($event["end_time"] ?? null);
+            return [
+                "title" => $event["title"],
+                "club" => $event["club_name"],
+                "date" => formatDbDate($event["event_date"] ?? null),
+                "time" => "{$start} - {$end}",
+                "location" => $event["location_name"],
+                "status" => $event["status"] ?: "pending",
+                "capacity" => max(1, (int) $event["max_participants"]),
+                "registered" => (int) $event["registered"],
+                "owner" => "Ban điều phối",
+                "channel" => "Từ bảng Event",
+                "description" => $event["description"],
+                "image" => $eventImages[$index % count($eventImages)],
+            ];
+        },
+        $eventData["rows"],
+        array_keys($eventData["rows"])
+    );
+}
+
+$registrationData = fetchRegistrationTable();
+if ($registrationData["connected"] && !empty($registrationData["rows"])) {
+    $approvalQueue = array_map(
+        fn($registration) => [
+            "student" => "SV " . $registration["student_ID"],
+            "event" => $registration["event_title"],
+            "status" => $registration["registration_status"] ?: "pending",
+            "time" => formatDbTime($registration["registered_at"] ?? null),
+        ],
+        $registrationData["rows"]
+    );
+}
+
+if ($clubData["connected"]) {
+    $activeClubCount = count(array_filter($clubData["rows"], fn($club) => ($club["status"] ?? "") === "active"));
+    $stats[0]["value"] = (string) $activeClubCount;
+    $stats[0]["trend"] = "Từ bảng Club";
+}
+
+if ($eventData["connected"]) {
+    $openEventCount = count(array_filter($eventData["rows"], fn($event) => ($event["status"] ?? "") === "open"));
+    $stats[1]["value"] = (string) $openEventCount;
+    $stats[1]["trend"] = "Từ bảng Event";
+}
+
+if ($registrationData["connected"]) {
+    $stats[2]["value"] = (string) count($registrationData["rows"]);
+    $stats[2]["trend"] = "Từ bảng Event_Registration";
+}
+
 $firstEvent = $events[0];
 $firstProgress = min(100, round($firstEvent["registered"] / $firstEvent["capacity"] * 100));
 ?>
@@ -258,10 +587,10 @@ $firstProgress = min(100, round($firstEvent["registered"] / $firstEvent["capacit
             </nav>
 
             <section class="sidebar-profile">
-                <div class="avatar">MA</div>
+                <div class="avatar"><?= e($adminProfile["initials"]) ?></div>
                 <div>
-                    <strong>Nguyễn Minh Anh</strong>
-                    <small>Ban điều phối sự kiện</small>
+                    <strong><?= e($adminProfile["firstName"] . " " . $adminProfile["lastName"]) ?></strong>
+                    <small><?= e($adminProfile["role"]) ?></small>
                 </div>
             </section>
         </aside>
@@ -274,16 +603,84 @@ $firstProgress = min(100, round($firstEvent["registered"] / $firstEvent["capacit
                 </label>
 
                 <div class="topbar-actions">
-                    <button class="icon-button" type="button" aria-label="Thông báo">
+                    <button class="icon-button notification-button" type="button" aria-label="Thông báo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
                         <span class="bell-dot" aria-hidden="true"></span>
                     </button>
                     <div class="divider" aria-hidden="true"></div>
-                    <div class="account-chip">
-                        <div>
-                            <strong>Minh Anh</strong>
-                            <small>admin</small>
-                        </div>
-                        <span class="avatar compact">MA</span>
+                    <div class="account-wrap">
+                        <button
+                            class="account-chip"
+                            id="adminProfileButton"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="adminProfilePanel"
+                        >
+                            <div>
+                                <strong><?= e($adminProfile["firstName"] . " " . $adminProfile["lastName"]) ?></strong>
+                                <small><?= e($adminProfile["role"]) ?></small>
+                            </div>
+                            <span class="avatar compact"><?= e($adminProfile["initials"]) ?></span>
+                        </button>
+
+                        <section class="admin-popover" id="adminProfilePanel" aria-label="Thông tin admin" hidden>
+                            <div class="admin-profile-head">
+                                <div class="avatar admin-avatar"><?= e($adminProfile["initials"]) ?></div>
+                                <div>
+                                    <strong><?= e($adminProfile["firstName"] . " " . $adminProfile["lastName"]) ?></strong>
+                                    <small><?= e(strtoupper($adminProfile["role"])) ?></small>
+                                </div>
+                            </div>
+
+                            <div class="admin-status-grid">
+                                <article>
+                                    <span>ID sinh viên</span>
+                                    <strong><?= e($adminProfile["studentId"]) ?></strong>
+                                </article>
+                                <article>
+                                    <span>Trạng thái</span>
+                                    <strong class="verified-status"><?= e($adminProfile["status"]) ?></strong>
+                                </article>
+                            </div>
+
+                            <dl class="admin-info-list">
+                                <div>
+                                    <dt>First name</dt>
+                                    <dd><?= e($adminProfile["firstName"]) ?></dd>
+                                </div>
+                                <div>
+                                    <dt>Last name</dt>
+                                    <dd><?= e($adminProfile["lastName"]) ?></dd>
+                                </div>
+                                <div>
+                                    <dt>Phone number</dt>
+                                    <dd><?= e($adminProfile["phone"]) ?></dd>
+                                </div>
+                                <div>
+                                    <dt>Major</dt>
+                                    <dd><?= e($adminProfile["major"]) ?></dd>
+                                </div>
+                                <div>
+                                    <dt>Academic degree</dt>
+                                    <dd><?= e($adminProfile["degree"]) ?></dd>
+                                </div>
+                                <div>
+                                    <dt>Class</dt>
+                                    <dd><?= e($adminProfile["class"]) ?></dd>
+                                </div>
+                            </dl>
+
+                            <section class="admin-db-status <?= $roleData["connected"] ? "connected" : "offline" ?>">
+                                <span>Bảng Role</span>
+                                <strong><?= $roleData["connected"] ? e((string) count($roleRows)) . " vai trò" : "Chưa kết nối" ?></strong>
+                                <small><?= e($roleData["message"]) ?></small>
+                            </section>
+
+                            <button class="admin-action" type="button">Quản lý hồ sơ</button>
+                        </section>
                     </div>
                 </div>
             </header>
@@ -460,6 +857,41 @@ $firstProgress = min(100, round($firstEvent["registered"] / $firstEvent["capacit
                                         </article>
                                     <?php endforeach; ?>
                                 </div>
+                            </section>
+
+                            <section class="panel-section role-panel">
+                                <div class="section-heading compact">
+                                    <div>
+                                        <p class="eyebrow">Database</p>
+                                        <h2>Phân quyền</h2>
+                                    </div>
+                                    <span class="db-pill <?= $roleData["connected"] ? "connected" : "offline" ?>">
+                                        <?= $roleData["connected"] ? "Live" : "Offline" ?>
+                                    </span>
+                                </div>
+
+                                <?php if (!$roleData["connected"]): ?>
+                                    <p class="db-message"><?= e($roleData["message"]) ?></p>
+                                <?php elseif (empty($roleRows)): ?>
+                                    <p class="db-message">Bảng Role đã kết nối nhưng chưa có dữ liệu.</p>
+                                <?php else: ?>
+                                    <div class="role-list">
+                                        <?php foreach ($roleRows as $role): ?>
+                                            <article class="role-row">
+                                                <span>#<?= e((string) $role["ID"]) ?></span>
+                                                <div>
+                                                    <strong><?= e(roleTitleLabel($role["role_title"])) ?></strong>
+                                                    <small><?= e(permissionLabel($role["permission"])) ?></small>
+                                                </div>
+                                            </article>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="role-summary">
+                                        <span><?= e((string) ($rolePermissions["regular"] ?? 0)) ?> cơ bản</span>
+                                        <span><?= e((string) ($rolePermissions["moderator"] ?? 0)) ?> điều phối</span>
+                                        <span><?= e((string) ($rolePermissions["manager"] ?? 0)) ?> quản lý</span>
+                                    </div>
+                                <?php endif; ?>
                             </section>
                         </aside>
                     </section>
