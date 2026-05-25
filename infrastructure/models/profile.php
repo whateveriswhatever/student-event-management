@@ -120,6 +120,23 @@
             
         }
 
+        public function create(string $sID, string $m, DegreeType $d): ?Profile {
+            $newProfile = new Profile($sID, $m, $d);
+            $isSuccess = $this->add(
+                [
+                    "student_ID" => $sID,
+                    "major" => $m, 
+                    "degree" => $d->value
+                ]
+            );
+            if ($isSuccess) {
+                return $newProfile;
+            } else {
+                throw new RuntimeException("Failed to create new student profile!");
+                
+            }
+        }
+
         #[Override]
         public function hydrate(array $row): Profile
         {

@@ -41,5 +41,11 @@
             }
         }
 
+        public function view(): void {
+            $clubID = (int)($_GET["id"] ?? 0);
+            $club = ($this->clubRepo)->findByID($clubID);
+            $this->render("clubs/view", ["club" => $club]);
+        }
+
     }
 ?>

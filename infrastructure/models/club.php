@@ -104,6 +104,13 @@
             }
         }
 
+        public function findByID(int $id): ?Club {
+            $data = $this->findViaCriteria(["ID" => $id]);
+            if (empty($data)) throw new InvalidArgumentException("Club with ID {$id} doesn't exist!");
+            $row = $data[0];
+            return $this->hydrate($row);
+        }
+
         public function findByName(string $n): ?Club {
             $n = strtolower($n);
             $data = $this->findViaCriteria(["name" => $n]);

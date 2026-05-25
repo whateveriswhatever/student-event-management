@@ -1,10 +1,10 @@
 <?php
     class BaseController {
-        protected function view(string $view, array $data = []): void {
-            extract($data);
-            $content = root_dir . "/app/views/{$view}.php";
-            require root_dir . "/app/views/layouts/main.php";
-        }
+        // protected function view(string $view, array $data = []): void {
+        //     extract($data);
+        //     $content = root_dir . "/app/views/{$view}.php";
+        //     require root_dir . "/app/views/layouts/main.php";
+        // }
 
         protected function redirect(string $url): void {
             header("Location: {$url}");

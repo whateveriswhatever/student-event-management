@@ -30,6 +30,7 @@ create table Student (
     profile_ID int not null,
     phone_number varchar(12) not null,
     email varchar(36) not null,
+    password varchar(95) not null,
 
     foreign key (profile_ID) references Profile(ID)
 );

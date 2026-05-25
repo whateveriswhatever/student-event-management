@@ -101,11 +101,12 @@
             ]);
         }
 
-        public function create(RoleTitle $rT, RolePermission $rP): Role {
+        public function create(RoleTitle $rT, RolePermission $rP): ?Role {
             $role = new Role($rT, $rP);
-            $isSuccess = $this->add(["role_title" => $rT->value, "permission" => $rP->value]);
+            $isSuccess = $this->add(["role_title" => ($role->getTitle())->value, "permission" => ($role->getPermission())->value]);
             if (!$isSuccess) throw new RuntimeException("Failed to create a new role!");
-            return $role;
+            $generatedID = $this->getLatestID();
+            return new Role($rT, $rP, $generatedID);
         }
 
         public function findByTitle(RoleTitle $rT): array {

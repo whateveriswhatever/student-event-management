@@ -64,9 +64,9 @@
             $location = new Location($b, $r, $a);
             $isSuccess = $this->add(
                 [
-                    "building" => $b,
-                    "room" => $r, 
-                    "attendance_capacity" => $a
+                    "building" => $location->getBuilding(),
+                    "room" => $location->getRoom(), 
+                    "attendance_capacity" => $location->getMaximumCapacity()
                 ]
             );
             if (!$isSuccess) throw new RuntimeException("Failed to create new location!");

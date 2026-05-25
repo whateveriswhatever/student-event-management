@@ -222,7 +222,7 @@
         public function findByID(int $id): ?Event {
             $data = $this->findViaCriteria(["ID" => $id]);
             if (empty($data)) return null;
-            return $data[0];
+            return $this->hydrate($data[0]);
         }
 
         public function findAllFromClub(int $cID): array {
@@ -371,10 +371,10 @@
             );
         }
 
-        public function findAllRegistrationsFromEvent(int $eID): array {
-            $rows = $this->findViaCriteria(["ID" => $eID]);
+        public function findAllRegistrationsFromStudent(int $sID): array {
+            $rows = $this->findViaCriteria(["student_ID" => $sID]);
             return array_map(
-                fn($row) => $row, $rows
+                fn($row) => $this->hydrate($row), $rows
             );
         }
 

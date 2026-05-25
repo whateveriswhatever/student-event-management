@@ -1,6 +1,6 @@
 <?php
     require_once root_dir . "/config/database-config.php";
-
+    require_once root_dir . "/models/profile.php";
     /*
         Student entity:
         - Business state 
