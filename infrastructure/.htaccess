@@ -1,8 +1,6 @@
 RewriteEngine On
 
-# Stop rewriting if the file or directory actually exists on the server
-RewriteCond %{REQUEST_FILENAME} !-f 
-RewriteCond %{REQUEST_FILENAME} !-d 
+RewriteCond %{REQUEST_URI} !/public/
 
-# Send everything else to index.php
-RewriteRule ^(.*)$ index.php [L, QSA]
+# Route everything to the public folder
+RewriteRule ^(.*)$ public/$1 [L]
