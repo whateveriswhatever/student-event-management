@@ -2,8 +2,31 @@
     // Front router
     define("root_dir", dirname(__DIR__));
 
+    // CORS config
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
     $requestURI = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
     $requestMethod = $_SERVER["REQUEST_METHOD"];
+
+    $folderName = "final-project";
+    $baseFolder = "/{$folderName}/infrastructure";
+
+    // Strip the base folder from the URI
+    if (str_starts_with($requestURI, $baseFolder)) {
+        $requestURI = substr($requestURI, strlen($baseFolder));
+    }
+
+    // Strip "/public" in case the internal Apache redirect leaks it into the URI
+    if (str_starts_with($requestURI, "/public")) {
+        $requestURI = substr($requestURI, 7);
+    }
+
+    // If the URI is completely empty after stripping, default it to the homepage
+    if ($requestURI === "") {
+        $requestURI = "/";
+    }
 
     // Route registry [Method][Path] -> [ControllerClass, ControllerAction]
     $routes = [
@@ -41,6 +64,11 @@
         exit;
     };
 
+    if ($requestMethod === "OPTIONS") {
+        http_response_code(200);
+        exit();
+    }
+
 
     // Check if the requested route exists
     if (isset($routes[$requestMethod][$requestURI])) {
@@ -48,7 +76,8 @@
         $controllerName = $target[0];
         $actionName = $target[1];
 
-        $controllerFile = root_dir . "/controllers/{$controllerName}.php";
+        $controllerFile = root_dir . "/app/controllers/{$controllerName}.php";
+        echo "<div>Trying to find file at: {$controllerFile}</div>";
 
         if (file_exists($controllerFile)) {
             require_once $controllerFile;
