@@ -14,7 +14,7 @@
         // Rendering a traditional PHP/HTML template
         protected function render(string $view, array $data = []): void {
             extract($data);
-            $viewPath = root_dir . "/views/{$view}.php";
+            $viewPath = root_dir . "/app/views/{$view}.php";
 
             if (file_exists($viewPath)) {
                 require_once $viewPath;
