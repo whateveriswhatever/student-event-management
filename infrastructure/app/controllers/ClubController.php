@@ -1,5 +1,5 @@
 <?php
-    require_once root_dir . "/controllers/BaseController.php";
+    require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/club.php";
 
     class ClubController extends BaseController {
