@@ -28,6 +28,8 @@
         $requestURI = "/";
     }
 
+    echo "<div>Current request URI: {$requestURI}</div>";
+
     // Route registry [Method][Path] -> [ControllerClass, ControllerAction]
     $routes = [
         "GET" => [
@@ -38,7 +40,8 @@
             "/events"                   => ["EventController", "index"],
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
-            "/student/memberships"      => ["MembershipController", "studentMemberships"]
+            "/student/memberships"      => ["MembershipController", "studentMemberships"],
+            "/login"                    => ["StudentController", "showAuthPage"]
         ],
 
         "POST" => [
