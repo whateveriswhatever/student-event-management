@@ -1,6 +1,7 @@
 <?php
     require_once root_dir . "/config/database-config.php";
     require_once root_dir . "/models/student.php";
+    require_once root_dir . "/models/base.php";
 
     enum DegreeType: string {
         case UNDER = "undergraduate";
@@ -18,18 +19,15 @@
 
         private array $availableMajors = [
         // Major -> Class code
-        "mathematics" => "MAT",
-        "physics" => "PHY",
-        "electrical engineering" => "EEG",
-        "economics" => "ECO",
+        "informatics and computer engineering" => "ICE",
+        "business and data analysis" => "BDA",
+        "management information system" => "MIS",
+        "accounting, analyzing and auditing" => "AC",
         "audit & accountance" => "AAE",
-        "computer science" => "CSE",
-        "computer engineering" => "CEG",
-        "marketing" => "MAR",
-        "mechanical engineering" => "MEG",
-        "civial engineering" => "CEG",
-        "finance" => "FIN",
-        "business ananysis" => "BAS"
+        "automation and informatics" => "AAI",
+        "english language" => "EL",
+        "digital business" => "DB",
+        "digital communication" => "DC"
         ];
 
         public function __construct(string $sID, string $m, DegreeType $dtype) {
