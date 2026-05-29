@@ -31,10 +31,10 @@
                     
                     // profile data
                     $major = $_POST["major"];
-                    $degree = $_POST["degree"];
+                    // $degree = $_POST["degree"];
                     $profileID = null;
 
-                    $profile = ($this->profileRepo)->create($id, $major, $degree);
+                    $profile = ($this->profileRepo)->create($id, $major);
                     if ($profile) {
                         $profileID = $profile->getProfileID();
                     } else {
@@ -44,12 +44,12 @@
                     $student = ($this->studentRepo)->create($id, $firstname, $lastname, $age, $phoneNumber, $email, $profileID, $password);
                     if ($student) {
                         // Redirecting back to main page
-                        header("Location: /index");
+                        header("Location: /final-project/infrastructure/login");
                         exit;
                     }
-                    $this->render("students/register", ["error" => "Couldn't register a new student!"]);
+                    $this->render("auth/login_register", ["error" => "Couldn't register a new student!"]);
                 } catch (Exception $ex) {
-                    $this->render("students/register", ["error" => $ex->getMessage()]);
+                    $this->render("auth/login_register", ["error" => $ex->getMessage()]);
                 }
             }
         }
@@ -64,21 +64,41 @@
                     if ($student !== null) {
                         $hashedPassword = $student->getPassword();
                         if (password_verify($password, $hashedPassword) === true) {
-                            $profile = ($this->profileRepo)->findByID((int)$student->getID());
-                            $this->render("index", ["data" => [
-                                "student" => $student,
-                                "profile" => $profile
-                            ]]);
+                            // Successful log-in: saving user details to the session
+                            $_SESSION["user_ID"] = $student->getID();
+                            $_SESSION["userLastname"] = $student->getLastname();
+                            // $profile = ($this->profileRepo)->findByID((int)$student->getID());
+                            // $this->render("clubs/index", ["data" => [
+                            //     "student" => $student,
+                            //     "profile" => $profile
+                            // ]]);
+                            header("Location: /final-project/infrastructure/");
+                            exit;
                         } else {
-                            $this->render("students/login", ["error" => "Failed to validate user password!"]);
+                            $this->render("auth/login_register", ["error" => "Incorrect password!"]);
                         }   
                     } else {
-                        $this->render("students/login", ["error" => "Student with ID {$studentID} doesn't exist!"]);
+                        $this->render("auth/login_register", ["error" => "Student with ID {$studentID} doesn't exist!"]);
                     }
                 } catch (Exception $ex) {
-                    $this->render("students/login", ["error" => $ex->getMessage()]);
+                    $this->render("auth/login_register", ["error" => $ex->getMessage()]);
                 }
             }
+        }
+
+        public function showAuthPage(): void {
+            $this->render("auth/login_register");
+        }
+
+        public function signout(): void {
+            // Clearing all session variables
+            session_unset();
+            // Destroying the session
+            session_destroy();
+
+            // Redirecting back to the login page
+            header("Location: /final-project/infrastructure/login");
+            exit;
         }
     }
 ?>
