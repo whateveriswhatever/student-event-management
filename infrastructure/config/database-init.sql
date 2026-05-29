@@ -23,7 +23,7 @@ create table Profile (
 );
 
 create table Student (
-    ID varchar(4) not null primary key, 
+    ID varchar(8) not null primary key, 
     firstname varchar(50) not null,
     lastname varchar(50) not null,
     age int,
@@ -59,7 +59,7 @@ create table Role (
 
 create table Club_Membership (
     ID int auto_increment primary key,
-    student_ID varchar(4) not null,
+    student_ID varchar(8) not null,
     club_ID int not null,
     role_ID int not null,
     joined_at timestamp default current_timestamp,
@@ -111,7 +111,7 @@ create table Attendance (
 create table Annoucement(
     ID int auto_increment primary key,
     club_ID int not null,
-    author_ID varchar(4) not null,
+    author_ID varchar(8) not null,
     title varchar(55) not null,
     description varchar(1000) not null,
 
@@ -121,8 +121,8 @@ create table Annoucement(
 
 create table Feedback (
     ID int auto_increment primary key,
-    from_user_ID varchar(4) not null,
-    to_user_ID varchar(4) not null,
+    from_user_ID varchar(8) not null,
+    to_user_ID varchar(8) not null,
     on_event_ID int not null,
     at_timestamp timestamp default current_timestamp,
 
