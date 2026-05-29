@@ -1,42 +1,16 @@
 <?php
-
-	function loadEnvFile(string $filePath): void {
-		if (!file_exists($filePath)) {
-			throw new Exception ("The file at {$filePath} doesn't exist!");
-		}
-		$lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-		foreach ($lines as $line) {
-			// Skip comments
-			if (strpos(trim($line), '#') === 0) {
-				continue;
-			}
-			// Split into key and value pair 
-			if (strpos($line, '=') !== false) {
-				list($key, $value) = explode('=', $line, 2);
-				$key = trim($key);
-				$value = trim($value);
-
-				// Remove surrounding quotes if present
-				$value = trim($value, "\"'");
-
-				// Set the environment variable
-				putenv("$key=$value");
-				$_ENV[$key] = $value;
-			}
-		}
-	}
-
-	loadEnvFile(__DIR__ . "/.env");
+	require_once root_dir . "/config/env-config.php";
 
 	class DatabaseConfig {
 		private static ?DatabaseConfig $instance = null;
 		private ?PDO $connection; 
-		
+		private EnvLoader $env;
 		private function __construct() {
-			$ip = $_ENV["DB_HOST"];
-			$dbName = $_ENV["DB_NAME"];
-			$username = $_ENV["DB_USERNAME"];
-			$password = $_ENV["DB_PASSWORD"];
+			$this->env = new EnvLoader(__DIR__ . "/.env");
+			$ip = ($this->env)->get("DB_HOST");
+			$dbName = ($this->env)->get("DB_NAME");
+			$username = ($this->env)->get("DB_USERNAME");
+			$password = ($this->env)->get("DB_PASSWORD");
 			$dsn = "mysql:host={$ip};dbname={$dbName};charset=utf8mb4";
 			$options = [
 				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
