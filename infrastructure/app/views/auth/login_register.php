@@ -10,6 +10,12 @@
 </head>
 <body>
     <div class="auth-container">
+        <?php if (isset($error)): ?>
+            <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px;
+            text-align: center; font-weight: bold;">
+                <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
         <div class="auth-header">
             <div class="auth-logo">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
@@ -18,14 +24,14 @@
         </div>
 
         <div class="card" id="login-section">
-            <form action="/login" method="POST">
+            <form action="/final-project/infrastructure/auth/login" method="POST">
                 <div class="form-group">
                     <label class="form-label">Student ID</label>
-                    <input type="text" name="student_ID" class="form-input" placeholder="e.g. 36071069" required>
+                    <input type="text" name="studentID" class="form-input" placeholder="e.g. 36071069" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                    <input type="password" name="inputPassword" class="form-input" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; padding: 0.75rem;">Sign In</button>
             </form>
@@ -35,7 +41,7 @@
         </div>
 
         <div class="card hidden" id="register-section">
-            <form action="/register" method="POST">
+            <form action="/final-project/infrastructure/auth/signup" method="POST">
                 <div style="display: flex; gap: 1rem;">
                     <div class="form-group" style="flex: 1;">
                         <label class="form-label">First Name</label>
@@ -49,7 +55,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Student ID</label>
-                    <input type="text" name="student_ID" class="form-input" required>
+                    <input type="text" name="ID" class="form-input" required>
                 </div>
 
                 <div style="display: flex; gap: 1rem;">
@@ -59,22 +65,32 @@
                     </div>
                     <div class="form-group" style="flex: 2;">
                         <label class="form-label">Phone Number</label>
-                        <input type="tel" name="phone" class="form-input" required>
+                        <input type="tel" name="phoneNumber" class="form-input" required>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-input" placeholder="" required />
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Major</label>
                     <select name="major" class="form-select" required>
                         <option value="" disabled selected>Select your major...</option>
-                        <option value="ICE">Informatics and Computer Engineering</option>
-                        <option value="BDA">Business and Data Analysis</option>
-                        <option value="MIS">Management Information System</option>
-                        <option value="AC">Accounting, Analyzing and Auditing</option>
-                        <option value="AAI">Automation and Informatics</option>
-                        <option value="EL">English Language</option>
-                        <option value="DC">Digital Communication</option>
+                        <option value="informatics and computer engineering">Informatics and Computer Engineering</option>
+                        <option value="business and data analysis">Business and Data Analysis</option>
+                        <option value="management information system">Management Information System</option>
+                        <option value="accounting, analyzing and auditing">Accounting, Analyzing and Auditing</option>
+                        <option value="automation and informatics">Automation and Informatics</option>
+                        <option value="english language">English Language</option>
+                        <option value="digital communication">Digital Communication</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="" required />
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; padding: 0.75rem;">Create Account</button>
