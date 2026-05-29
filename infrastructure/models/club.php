@@ -1,5 +1,6 @@
 <?php
     require_once root_dir . "/config/database-config.php";
+    require_once root_dir . "/models/base.php";
     
     enum Status: string {
         case ACTIVE = "active";
