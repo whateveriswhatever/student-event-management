@@ -1,4 +1,7 @@
 <?php
+    // Starting the session to track logged-in users globally
+    session_start();
+
     // Front router
     define("root_dir", dirname(__DIR__));
 
@@ -41,7 +44,8 @@
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
             "/student/memberships"      => ["MembershipController", "studentMemberships"],
-            "/login"                    => ["StudentController", "showAuthPage"]
+            "/login"                    => ["StudentController", "showAuthPage"],
+            "/signout"                  => ["StudentController", "signout"]
         ],
 
         "POST" => [
@@ -53,8 +57,9 @@
             "/membership/join"          => ["MembershipController", "join"],
             "/attendance/checkin"       => ["AttendanceController", "checkIn"],
             "/feedback/submit"          => ["FeedbackController", "store"],
-            "/locations/create"         => ["LocationController", "store"]
-            
+            "/locations/create"         => ["LocationController", "store"],
+            "/auth/login"               => ["StudentController", "login"],
+            "/auth/signup"              => ["StudentController", "register"]
         ]
     ];
 
