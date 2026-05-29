@@ -32,9 +32,9 @@
             ?>
                 <div class="profile-info">
                     <img src="https://api.dicebear.com/7.x/initials/svg?seed=<?= $_SESSION['user_ID'] ?? 'ST' ?>" alt="Avatar" class="avatar">
-                    <span class="student-name"><?= htmlspecialchars($_SESSION['student_name'] ?? 'Active Student') ?></span>
+                    <span class="student-name"><?= htmlspecialchars($_SESSION['userLastname'] ?? 'Active Student') ?></span>
                 </div>
-                <a href="/logout" class="logout-btn" title="Sign Out">
+                <a href="/final-project/infrastructure/signout" class="logout-btn" title="Sign Out">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 </a>
             <?php else: ?>
