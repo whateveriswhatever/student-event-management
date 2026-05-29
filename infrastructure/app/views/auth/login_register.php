@@ -27,7 +27,7 @@
             <form action="/final-project/infrastructure/auth/login" method="POST">
                 <div class="form-group">
                     <label class="form-label">Student ID</label>
-                    <input type="text" name="studentID" class="form-input" placeholder="e.g. 36071069" required>
+                    <input type="text" name="studentID" class="form-input" placeholder="e.g. 23031036" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
