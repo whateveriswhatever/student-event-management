@@ -112,13 +112,16 @@
                     [a-zA-Z0-9_-]* allows zero or more of the allowed characters (letters, numbers, underscores, hyphens) in the middle
                     [a-zA-Z0-9]$ ensures the string ends with a letter or number 
                 */
-                if (preg_match("^(?!.*[_-]{2})[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$", $u)) return true;
+                if (preg_match("/^(?!.*[_-]{2})[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]$/", $u)) return true;
+                // if (preg_match("/^(?!.*[_-]{2})[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/", $u) === true) return true;
                 return false;
             };
             $validateDomain = function (string $d): bool {
                 $x = explode('.', $d);
-                if (count($x) > 2) return false;
                 if (preg_match("/^[a-zA-Z0-9](?!.*--)[a-zA-Z0-9-]*[a-zA-Z0-9]$/", $x[0])) return true;
+                // if (preg_match(
+                //     "/^(?!-)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/", $x[0]
+                // ) === true) return true;
                 return false;
             };
             $lowerize = function (string $s): string {
@@ -224,7 +227,8 @@
                 "age" => $a, 
                 "phone_number" => $student->getPhoneNumber(),
                 "profile_ID" => $student->getProfileID(),
-                "password" => $hashedPassword
+                "password" => $hashedPassword,
+                "email" => $student->getEmail()
             ]);
             if ($isSuccess) {
                 return new Student(
@@ -260,7 +264,7 @@
         {
             return new Student(
                 (string)$row["ID"],
-                (string)$row["fristname"],
+                (string)$row["firstname"],
                 (string)$row["lastname"],
                 (int)$row["age"],
                 (string)$row["phone_number"],
