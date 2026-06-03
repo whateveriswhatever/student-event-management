@@ -100,13 +100,14 @@
                 $newDataKeys = array_keys($updatedData);
                 $newDataVals = array_values($updatedData);
                 $keys = array_keys($critera);
-                $vals = array_keys($critera);
+                $vals = array_values($critera);
                 $where = implode(" and ", array_map(function ($key) {return "{$key} = :{$key}";}, $keys));
                 $setStmt = implode(" , ", array_map(function ($key) {return "{$key} = :{$key}";}, $newDataKeys));
                 $query = "
                     update {$this->tableName}
                     set {$setStmt}
                     where {$where}";
+                // echo "<div>{$query}</div>";
                 $params = [];
                 for ($i = 0; $i < count($keys); $i++) {
                     $params[":{$keys[$i]}"] = $vals[$i];
@@ -114,6 +115,7 @@
                 for ($j = 0; $j < count($newDataKeys); $j++) {
                     $params[":{$newDataKeys[$j]}"] = $newDataVals[$j];
                 }
+                // echo "<div>{$query}</div>";
                 $stmt = ($this->dbConnection)->prepare($query);
                 $isSuccess = $stmt->execute($params);
                 if (!$isSuccess) {
