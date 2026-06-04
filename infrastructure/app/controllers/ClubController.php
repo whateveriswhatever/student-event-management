@@ -64,10 +64,11 @@
                 if (isset($_FILES["logo_image"]) && $_FILES["logo_image"]["error"] === UPLOAD_ERR_OK) {
                     $fileExtension = strtolower(pathinfo($_FILES["logo_image"]["name"], PATHINFO_EXTENSION));
                     $newFileName = uniqid("club_", true) . "." . $fileExtension;
-                    $destinationPath = root_dir . "/public/assets/images/clubs" . $newFileName;
+                    $destinationPath = root_dir . "/public/assets/images/clubs/" . $newFileName;
 
                     if (move_uploaded_file($_FILES["logo_image"]["tmp_name"], $destinationPath)) {
-                        $logoURL = $newFileName;
+                        $logoURL = base_folder . "/public/assets/images/clubs/" . $newFileName;
+                        echo "<div>Logo URL: {$logoURL}</div>";
                     } else {
                         throw new Exception("Failed to upload the club logo!");
                     }
@@ -86,7 +87,7 @@
                     $roleID = $adminRole->getID();
                     $joinRequest = ($this->membershipRepo)->createJoinRequest($studentID, $clubID, $roleID);
                     if ($joinRequest) {
-                        $requestID = $joinRequest->getID();
+                        $requestID = $joinRequest->getID(); echo "<div>Membership ID for the request: {$requestID}</div>";
                         $isSuccess = ($this->membershipRepo)->approveMembership($requestID);
                         if ($isSuccess) {
                             ($this->clubRepo)->increaseTotalMembers($clubID);

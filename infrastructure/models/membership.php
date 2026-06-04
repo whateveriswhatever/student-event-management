@@ -5,7 +5,7 @@
     require_once root_dir . "/models/club.php";
 
     enum MembershipStatus: string {
-        case APPROVE = "approval";
+        case APPROVE = "active";
         case REJECT = "rejected";
         case LEAVE = "left";
         case PROHIBIT = "banned";
@@ -89,7 +89,7 @@
             }
         }
         
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {return $this->ID;}
         public function getStudentID(): int {return $this->studentID;}
         public function getClubID(): int {return $this->clubID;}
         public function getRoleID(): int {return $this->roleID;}
@@ -132,8 +132,16 @@
             ]);
 
             if (!$isSucess) throw new RuntimeException("Failed to create membership request");
-
-            return $membership;
+            $generatedID = ($this)->getLatestID();
+            return new Membership(
+                $sID,
+                $cID,
+                $rID,
+                $membership->getJoinedTimeline(),
+                "pending",
+                $generatedID
+            ); 
+            
         }
 
         protected function hydrate(array $row): Membership {
@@ -188,24 +196,32 @@
 
         public function approveMembership(int $id): bool {
             return $this->updateViaCriteria([
-                "status" => (MembershipStatus::APPROVE)->value
+                "membership_status" => (MembershipStatus::APPROVE)->value
             ], ["ID" => $id]);
         }
 
         public function rejectMembership(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::REJECT)->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::REJECT)->value
+            ], ["ID" => $id]);
         }
 
         public function pendingMembership(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::PENDING)->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membersip_status" => (MembershipStatus::PENDING)->value
+            ], ["ID" => $id]);
         }
 
         public function membershipQuit(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::LEAVE)->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::LEAVE)->value
+            ], ["ID" => $id]);
         }
 
         public function prohibitMembership(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::PROHIBIT)->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::PROHIBIT)->value
+            ], ["ID" => $id]);
         }
 
         public function promoteMembershipRole(int $id, RoleTitle $t): bool {
