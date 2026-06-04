@@ -16,19 +16,19 @@
             GET /club/members?clubID=X
             Get all memberships within a specific club 
         */
-        public function clubMembers(): void {
-            $clubID = (int)($_GET["club_ID"] ?? 0);
-            if ($clubID < 1) {
-                $this->render("errors/400", ["message" => "Invalid or missing club ID!"]);
-                return;
-            }
+        // public function clubMembers(): void {
+        //     $clubID = (int)($_GET["club_ID"] ?? 0);
+        //     if ($clubID < 1) {
+        //         $this->render("errors/400", ["message" => "Invalid or missing club ID!"]);
+        //         return;
+        //     }
 
-            $memberships = ($this->membershipRepo)->findAllMembersInAClub($clubID);
-            $this->render("membership/club_members", [
-                "clubID" => $clubID,
-                "memberships" => $memberships
-            ]);
-        }
+        //     $memberships = ($this->membershipRepo)->findAllMembersInAClub($clubID);
+        //     $this->render("membership/club_members", [
+        //         "clubID" => $clubID,
+        //         "memberships" => $memberships
+        //     ]);
+        // }
 
         /*
             GET /student/membership?studentID=X 

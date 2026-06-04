@@ -15,18 +15,20 @@
         private DateTime $foundedDate;
         private string $logoURL;
         private Status $status;
+        private int $totalMembers;
 
-        public function __construct(string $n, string $d, DateTime $fd, string $url, Status $s, ?int $id = null) {
+        public function __construct(string $n, string $d, DateTime $fd, string $url, Status $s, ?int $id = null, ?int $total = 0) {
             $this->setName($n);
             $this->setDescription($d);
             $this->setFoundedDate($fd);
             $this->setLogoURL($url);
             $this->setStatus($s);
             $this->setID($id);
+            $this->setTotalMembers($total);
         }
 
-        private function setID(int $id): void {
-            if ($id < 1 && $id === null) throw new InvalidArgumentException("Invalid ID");
+        private function setID(?int $id): void {
+            // if ($id < 1 && $id === null) throw new InvalidArgumentException("Invalid ID");
             $this->ID = $id;
         }
 
@@ -76,12 +78,18 @@
             $this->status = $s;
         }
 
+        private function setTotalMembers(int $x): void {
+            if ($x < 0) throw new InvalidArgumentException("Invalid input for total members!");
+            else {$this->totalMembers = $x;}
+        }
+
         public function getID(): int {return $this->ID;}
         public function getName(): string {return $this->name;}
         public function getDescription(): string {return $this->description;}
         public function getFoundedDate(): DateTime {return $this->foundedDate;}
         public function getLogoURL(): string {return $this->logoURL;}
         public function getStatus(): Status {return $this->status;}
+        public function getTotalMembers(): int {return $this->totalMembers;}
     }
 
     class ClubRepository extends BaseRepository {
@@ -89,17 +97,20 @@
             parent::__construct("club");
         }
 
+        
+
         public function create(string $n, string $d, DateTime $fd, string $url, Status $s): ?Club {
-            $x = new Club($n, $d, $fd, $url, $s);
             $isSuccess = $this->add([
-                "name" => $x->getName(),
-                "description" => $x->getDescription(),
-                "founded_date" => ($x->getFoundedDate())->format("Y-m-d H:i:s"),
-                "status" => ($x->getStatus())->value
+                "name" => $n,
+                "description" => $d,
+                "founded_date" => $fd->format("Y-m-d H:i:s"),
+                "status" => $s->value,
+                "logo_url" => $url,
+                "total_members" => 0
                 ]);
             if ($isSuccess) {
                 $generatedID = $this->getLatestID();
-                return new Club ($n, $d, $fd, $url, $s, $generatedID);
+                return new Club ($n, $d, $fd, $url, $s, $generatedID, 0);
             } else {
                 return null;
             }
@@ -119,12 +130,13 @@
 
             $row = $data[0];
             return new Club(
-                $row["ID"],
                 $row["name"],
                 $row["description"],
                 $row["founded_date"],
                 $row["logo_url"],
-                $row["status"]);
+                $row["status"],
+                $row["ID"],
+                $row["total_members"]);
         }
 
         public function save(Club $c): bool {
@@ -134,14 +146,15 @@
                 "description" => $c->getDescription(),
                 "founded_date" => $c->getFoundedDate(),
                 "logo_url" => $c->getLogoURL(),
-                "status" => $c->getStatus()
+                "status" => $c->getStatus(),
+                "total_members" => $c->getTotalMembers()
             ], ["ID" => $c->getID()]);
         }
 
-        protected function hydrate(array $row): Club {
+        public function hydrate(array $row): Club {
             if (empty($row)) throw new RuntimeException("Empty row!");
             try {
-                $fD = new DateTime($row["founded_at"]);
+                $fD = new DateTime($row["founded_date"]);
             } catch (PDOException $ex) {
                 throw new RuntimeException("Invalid founded date!");
             }
@@ -150,7 +163,9 @@
                 (string)$row["description"],
                 new DateTime($row["founded_date"]),
                 (string)$row["logo_url"],
-                Status::from($row["status"])
+                Status::from($row["status"]),
+                (int)($row["ID"]),
+                (int)($row["total_members"])
             );
             return $club;
         }
@@ -161,6 +176,20 @@
             return array_map(
                 fn ($each) => $this->hydrate($each), $all 
             );
+        }
+
+        public function increaseTotalMembers(int $cID): bool {
+            $rows = ($this->findViaCriteria(["ID" => $cID]));
+            if (!empty($rows)) {
+                $curr = (int)$rows[0]["total_members"];
+
+                // echo "<div>Current total members in club ID {$cID}: {$curr}</div>";
+                $curr++;
+                // echo "<div>Current total members in club ID {$cID} after getting incremented: {$curr}</div>";
+                $isSuccess = $this->updateViaCriteria(["total_members" => $curr], ["ID" => $cID]);
+                return $isSuccess;
+            }
+            return false;
         }
     }
 ?>

@@ -100,5 +100,40 @@
             header("Location: /final-project/infrastructure/login");
             exit;
         }
+
+        public function showProfile(): void {
+            // Securing the page: redirecting users to login page if the user session isn't active
+            if (!isset($_SESSION["user_ID"])) {
+                header("Location: /final-project/infrastructure/login");
+                exit;
+            }
+
+            try {
+                $studentID = $_SESSION["user_ID"];
+                $student = ($this->studentRepo)->findByID($studentID);
+                $profile = ($this->profileRepo)->findByStudentID($studentID);
+                if ($student === null) {
+                    throw new Exception("Student data couldn't be retrieved!");
+                } else {
+                    echo "<div>Found student with ID: {$studentID}!</div>";
+                }
+                /* Get joined clubs and events */
+                // $joinedClubs = ($this->studentRepo)->getAllJoinedClubs($studentID);
+                // $joinedEvents = ($this->studentRepo)->getAllJoinedEvents($studentID);
+                $joinedClubs = [];
+                $joinedEvents = [];
+                
+                $this->render("profile/index", [
+                    "student"       => $student,
+                    "profile"       => $profile,
+                    "joinedClubs"   => $joinedClubs,
+                    "joinedEvents"  => $joinedEvents
+                ]);
+
+
+            } catch (Exception $ex) {
+                $this->render("clubs/index", ["error" => $ex->getMessage(), "description" => "Failed to load the profile page!"]);
+            }
+        }
     }
 ?>

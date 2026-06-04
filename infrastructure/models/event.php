@@ -339,8 +339,10 @@
    
 
     class EventRegistrationRepository extends BaseRepository {
+        private EventRepository $eventRepo;
         public function __construct() {
             parent::__construct("event_registration");
+            $this->eventRepo = new EventRepository();
         }
 
         public function register(int $eID, int $sID, DateTime $rdAt, ?string $s = null): EventRegistration {
@@ -403,6 +405,17 @@
                 error_log($ex->getMessage());
                 throw new RuntimeException("Invalid founded date!");
             }
+        }
+
+        public function findAllEventsFromAStudent(int $sID): array {
+            $rows = $this->findViaCriteria(["student_ID" => $sID]);
+            $eventIds = array_map(
+                fn ($row) => $row["event_ID"], $rows
+            );
+            $events = array_map(
+                fn ($id) =>($this->eventRepo)->findByID($id), $eventIds
+            );
+            return $events;
         }
     }
 ?>
