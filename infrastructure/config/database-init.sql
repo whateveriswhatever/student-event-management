@@ -48,7 +48,8 @@ create table Club (
     description varchar(555) not null,
     founded_date datetime default current_timestamp,
     logo_url varchar(222) not null,
-    status enum("active", "low", "closed") not null
+    status enum("active", "low", "closed") not null,
+    total_members int default 0
 );
 
 create table Role (
