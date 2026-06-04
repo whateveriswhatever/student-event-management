@@ -117,6 +117,14 @@
             return true;
         }
 
+        public function findByStudentID(string $sID): ?Profile {
+            $data = $this->findViaCriteria(["student_ID" => $sID]);
+            if (empty($data)) return null;
+
+            $row = $data[0];
+            return $this->hydrate($row);
+        }
+
         public function linkToStudentViaID(string $sID, string $pID): bool {
             /* A student is allowed to have only one profile linked to them */
             // Check if current student has any profile linked to him yet

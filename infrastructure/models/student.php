@@ -1,6 +1,9 @@
 <?php
     require_once root_dir . "/config/database-config.php";
     require_once root_dir . "/models/profile.php";
+    require_once root_dir . "/models/club.php";
+    require_once root_dir . "/models/membership.php";
+    require_once root_dir . "/models/event.php";
     /*
         Student entity:
         - Business state 
@@ -191,8 +194,14 @@
     }
 
     class StudentRepository extends BaseRepository {
+        private ClubRepository $clubRepo;
+        private MembershipRepository $membershipRepo;
+        private EventRegistrationRepository $eventRegisRepo;
         public function __construct() {
             parent::__construct("student");
+            $this->clubRepo = new ClubRepository();
+            $this->membershipRepo = new MembershipRepository();
+            $this->eventRegisRepo = new EventRegistrationRepository();
         }
 
         public function findByID(string $ID): ?Student {
@@ -272,6 +281,23 @@
                 (int)$row["profile_ID"],
                 (string)$row["password"]
             );
+        }
+
+        public function getAllJoinedClubs(int $sID): array {
+            // Get all memberships
+            $clubIds = ($this->membershipRepo)->getJoinedClubIDOfAStudent($sID);
+            $clubs = [];
+            for ($i = 0; $i < count($clubIds); $i++) {
+                $clubs[] = ($this->clubRepo)->findByID($clubIds[$i]);
+            }
+
+            return $clubs;
+        }
+
+        public function getAllJoinedEvents(int $sID): array {
+            // Get all joined events
+            $events = ($this->eventRegisRepo)->findAllEventsFromAStudent($sID);
+            return $events;
         }
     }
 

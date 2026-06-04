@@ -27,7 +27,7 @@
         }
 
         private function setID(?int $id): void {
-            if ($id !== null) $this->setIDForAutoIncrementType($this->ID, $id);
+            $this->ID = $id;
         }
         private function setTitle(RoleTitle $x): void {
             $this->roleTitle = $x;
