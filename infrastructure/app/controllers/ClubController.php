@@ -3,6 +3,8 @@
     require_once root_dir . "/models/club.php";
     require_once root_dir . "/models/membership.php";
     require_once root_dir . "/models/role.php";
+    require_once root_dir . "/models/event.php";
+    require_once root_dir . "/models/student.php";
 
     class ClubController extends BaseController {
         private ClubRepository $clubRepo;
@@ -67,7 +69,7 @@
                     $destinationPath = root_dir . "/public/assets/images/clubs/" . $newFileName;
 
                     if (move_uploaded_file($_FILES["logo_image"]["tmp_name"], $destinationPath)) {
-                        $logoURL = base_folder . "/public/assets/images/clubs/" . $newFileName;
+                        $logoURL = base_folder_path . "/public/assets/images/clubs/" . $newFileName;
                         echo "<div>Logo URL: {$logoURL}</div>";
                     } else {
                         throw new Exception("Failed to upload the club logo!");
@@ -180,5 +182,69 @@
             
         }
 
+        public function show(): void {
+            // Validating incoming Club ID
+            if (!isset($_GET["id"])) {
+                $this->redirect(base_folder_path . "/clubs");
+                return;
+            }
+
+            $clubID = (int)$_GET["id"];
+            $clubData = ($this->clubRepo)->findByID($clubID);
+            if (!$clubData) {
+                $this->render("clubs/index", ["error" => "The requested club doesn't exist!"]);
+                return;
+            }
+
+            $club = is_array($clubData) ? ($this->clubRepo)->hydrate($clubData) : $clubData;
+            $isMember = false;
+            $events = [];
+
+            // Checking if user is logged in and holds an approved membership
+            if (isset($_SESSION["user_ID"])) {
+                $studentID = (string)$_SESSION["user_ID"];
+                $membership = ($this->membershipRepo)->findViaCriteria([
+                    "student_ID"        => $studentID,
+                    "club_ID"           => $clubID,
+                    "membership_status" => "active"
+                ]);
+                if (!empty($membership)) {
+                    $isMember = true;
+                    $eventRepo = new EventRepository();
+                    $rawEvents = $eventRepo->findViaCriteria(["club_ID" => $clubID]);
+
+                    foreach ($rawEvents as $row) {
+                        $event = $eventRepo->hydrate($row);
+                        $events[] = $event;
+                    }
+                }
+            }
+            // Fetching all joined members in the chosen club
+            $membersList = [];
+            $activeMemberships = ($this->membershipRepo)->findAllMembershipsViaStatus($clubID, MembershipStatus::APPROVE);
+            if (!empty($activeMemberships)) {
+                $studentRepo = new StudentRepository();
+                foreach ($activeMemberships as $mRow) {
+                    $mStudentID = (string)$mRow->getStudentID();
+                    $mRoleID = (int)$mRow->getRoleID();
+
+                    $studentData = $studentRepo->findByID($mStudentID);
+                    $roleObj = ($this->roleRepo)->findByID($mRoleID);
+
+                    $membersList[] = [
+                        "student" => $studentData,
+                        "role"      => $roleObj,
+                        "joined_at" => $mRow->getJoinedTimeLine() === null ? new DateTime($mRow["joined_at"]) : null
+                    ];
+                }
+            }
+
+            $this->render("clubs/show", [
+                "club"      => $club,
+                "isMember"  => $isMember,
+                "events"    => $events,
+                "members"   => $membersList
+            ]);
+        }
     }
 ?>

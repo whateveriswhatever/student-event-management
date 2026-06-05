@@ -2,14 +2,17 @@
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/membership.php";
     require_once root_dir . "/models/role.php";
+    require_once root_dir . "/models/student.php";
 
     class MembershipController extends BaseController {
         private MembershipRepository $membershipRepo;
         private RoleRepository $roleRepo;
+        private StudentRepository $studentRepo;
 
         public function __construct() {
             $this->membershipRepo = new MembershipRepository();
             $this->roleRepo = new RoleRepository();
+            $this->studentRepo = new StudentRepository();
         }
 
         /*
@@ -126,6 +129,35 @@
             } else {
                 $this->render("errors/500", ["message" => "Database execution failed while applying status update!"]);
             }
+        }
+
+        public function getMembersJson(): void {
+            header("Content-type: application/json");
+            $clubID = (int)($_GET["club_ID"] ?? 0);
+
+            if ($clubID < 1) {
+                echo json_encode(["error" => "Invalid or missing club ID!"]);
+                return;
+            }
+
+            try {
+                $memberships = ($this->membershipRepo)->findAllMembershipsViaStatus($clubID, MembershipStatus::APPROVE);
+                $results = [];
+                foreach ($memberships as $m) {
+                    $studentID = $m->getStudentID();
+                    $student = ($this->studentRepo)->findByID($studentID);
+                    $role = ($this->roleRepo)->findByID($m->getRoleID());
+                    $results[] = [
+                        "firstname" => $student->getFirstname(),
+                        "lastname"  => $student->getLastname(),
+                        "role"      => ($role->getTitle())->value
+                    ];
+                }
+                echo json_encode(["members" => $results]);
+            } catch (Exception $ex) {
+                echo json_encode(["error" => $ex->getMessage()]);
+            }
+            exit;
         }
     }
 ?>

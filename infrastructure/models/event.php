@@ -26,6 +26,7 @@
         private DateTime $endTime;
         private int $locationID;
         private int $maxParticipants;
+        private int $currParticipants;
         private EventStatus $status;
 
         public function __construct(
@@ -37,6 +38,7 @@
             DateTime $eT,
             int $lID,
             int $mP,
+            ?int $cP = 0,
             ?EventStatus $s = null,
             ?int $ID = null,
         ) {
@@ -102,6 +104,10 @@
             $this->maxParticipants = $x;
         }
 
+        private function setCurrParticipants(?int $x = 0): void {
+            $this->currParticipants = $x;
+        }
+
         private function closeEvent(): void {
             $this->status = EventStatus::CLOSED;
         }
@@ -161,6 +167,10 @@
         public function getStatus(): EventStatus {
             return $this->status;
         }
+
+        public function getCurrParticipants(): int {
+            return $this->currParticipants;
+        }
     }
 
     class EventRepository extends BaseRepository {
@@ -177,6 +187,7 @@
             DateTime $eT,
             int $lID,
             int $mP,
+            ?int $cP = 0,
             EventStatus $s
         ): Event {
             $event = new Event(
@@ -188,6 +199,7 @@
                 $eT,
                 $lID,
                 $mP,
+                $cP,
                 $s
             );
             $isSuccess = $this->add([
@@ -199,6 +211,7 @@
                 "end_time" => $event->getEndTime(),
                 "location_ID" => $event->getLocationID(),
                 "max_participants" => $event->getMaxParticipants(),
+                "current_participants" => $event->getCurrParticipants(),
                 "status" => ($event->getStatus())->value
             ]);
 
@@ -214,6 +227,7 @@
                 $eT,
                 $lID,
                 $mP,
+                $cP,
                 $s,
                 $generatedID
             );
@@ -237,7 +251,7 @@
         }
 
         #[Override]
-        protected function hydrate(array $row): Event {
+        public function hydrate(array $row): Event {
             if (empty($row)) throw new RuntimeException("Empty row!");
 
             try {
@@ -254,6 +268,7 @@
                     $eT,
                     (int)$row["location_ID"],
                     (int)$row["max_participants"],
+                    (int)$row["current_participants"],
                     EventStatus::from($row["status"]),
                     (int)$row["ID"]
                 );
@@ -416,6 +431,15 @@
                 fn ($id) =>($this->eventRepo)->findByID($id), $eventIds
             );
             return $events;
+        }
+
+        public function increaseCurrParticipants(int $eID): bool {
+            $rows = $this->findViaCriteria(["ID" => $eID]);
+            if (empty($rows)) throw new InvalidArgumentException("The event with ID: {$eID} doesn't exit!");
+            $curr = (int)($rows[0])["current_participants"];
+            $curr++;
+            $isSuccess = $this->updateViaCriteria(["current_participants" => $curr], ["ID" => $eID]);
+            return $isSuccess;
         }
     }
 ?>
