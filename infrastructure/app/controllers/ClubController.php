@@ -5,16 +5,19 @@
     require_once root_dir . "/models/role.php";
     require_once root_dir . "/models/event.php";
     require_once root_dir . "/models/student.php";
+    require_once root_dir . "/models/location.php";
 
     class ClubController extends BaseController {
         private ClubRepository $clubRepo;
         private MembershipRepository $membershipRepo;
         private RoleRepository $roleRepo;
+        private LocationRepository $locationRepo;
 
         public function __construct() {
             $this->clubRepo = new ClubRepository();
             $this->membershipRepo = new MembershipRepository();
             $this->roleRepo = new RoleRepository();
+            $this->locationRepo = new LocationRepository();
         }
 
         public function index(): void {
@@ -188,9 +191,10 @@
                 $this->redirect(base_folder_path . "/clubs");
                 return;
             }
-
+            $eventAddressMapper = [];
             $clubID = (int)$_GET["id"];
             $clubData = ($this->clubRepo)->findByID($clubID);
+            $currentUserRole = null;
             if (!$clubData) {
                 $this->render("clubs/index", ["error" => "The requested club doesn't exist!"]);
                 return;
@@ -210,11 +214,22 @@
                 ]);
                 if (!empty($membership)) {
                     $isMember = true;
+                    $userRoleID = (int)($membership[0])["role_ID"];
+                    $roleObj = ($this->roleRepo)->findByID($userRoleID);
+
+                    if ($roleObj) {
+                        $currentUserRole = strtolower(($roleObj->getTitle())->value);
+                    }
+
                     $eventRepo = new EventRepository();
                     $rawEvents = $eventRepo->findViaCriteria(["club_ID" => $clubID]);
 
                     foreach ($rawEvents as $row) {
                         $event = $eventRepo->hydrate($row);
+                        $eventLocationID = (int)$event->getLocationID();
+                        $eventAddress = ($this->locationRepo->findByID($eventLocationID))->getAddress();
+                        // echo "<div>Saving {$eventAddress} as value for location ID: {$eventLocationID}</div>";
+                        $eventAddressMapper[$eventLocationID] = $eventAddress;
                         $events[] = $event;
                     }
                 }
@@ -239,11 +254,15 @@
                 }
             }
 
+            
+
             $this->render("clubs/show", [
-                "club"      => $club,
-                "isMember"  => $isMember,
-                "events"    => $events,
-                "members"   => $membersList
+                "club"                  => $club,
+                "isMember"              => $isMember,
+                "events"                => $events,
+                "members"               => $membersList ?? [],
+                "currentUserRole"       => $currentUserRole,
+                "eventAddressMapper"    => $eventAddressMapper
             ]);
         }
     }

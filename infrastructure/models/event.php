@@ -29,6 +29,11 @@
         private int $currParticipants;
         private EventStatus $status;
 
+        private array $timeline = [
+            "open"  => null,
+            "end"   => null
+        ];
+
         public function __construct(
             int $cID,
             string $t,
@@ -51,6 +56,7 @@
             $this->setEndTime($eT);
             $this->setLocationID($lID);
             $this->setMaxPariticipants($mP);
+            $this->setCurrParticipants($cP);
             $this->setStatus($s); 
         }
 
@@ -78,20 +84,22 @@
         }
 
         private function setStartTime(DateTime $sT): void {
-            if ($this->getEndTime() !== null) {
-                if ($sT > $this->getEndTime()) throw new RuntimeException("Invalid time!");
-                $this->startTime = $sT;
+            if (isset($this->timeline["end"])) {
+                if ($sT > $this->timeline["end"]) throw new RuntimeException("Invalid time!");
+                $this->startTime = $sT; 
             } else {
                 $this->startTime = $sT;
             }
         }
 
         private function setEndTime(DateTime $eT): void {
-            if ($this->getStartTime() !== null) {
-                if ($eT < $this->getEndTime()) throw new RuntimeException("Invalid time!");
+            if (isset($this->timeline["open"])) {
+                if ($eT < $this->timeline["open"]) throw new RuntimeException("Invalid time!");
+                $this->endTime = $eT;
+            } else {
                 $this->endTime = $eT;
             }
-            $this->endTime = $eT;
+            
         }
 
         private function setLocationID(int $id): void {
@@ -171,6 +179,8 @@
         public function getCurrParticipants(): int {
             return $this->currParticipants;
         }
+
+        
     }
 
     class EventRepository extends BaseRepository {
@@ -207,8 +217,8 @@
                 "title" => $event->getTitle(),
                 "description" => $event->getDescription(),
                 "event_date" => $event->getEventDate()->format("Y-m-d"),
-                "start_time" => $event->getStartTime(),
-                "end_time" => $event->getEndTime(),
+                "start_time" => $event->getStartTime()->format("Y-m-d H:i:s"),
+                "end_time" => $event->getEndTime()->format("Y-m-d H:i:s"),
                 "location_ID" => $event->getLocationID(),
                 "max_participants" => $event->getMaxParticipants(),
                 "current_participants" => $event->getCurrParticipants(),
@@ -260,7 +270,7 @@
                 $eT = new DateTime($row["end_time"]);
 
                 $event = new Event(
-                    (int)$row["club_id"],
+                    (int)$row["club_ID"],
                     (string)$row["title"],
                     (string)$row["description"],
                     $eD,
