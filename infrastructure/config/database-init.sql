@@ -81,6 +81,7 @@ create table Event (
     end_time timestamp default current_timestamp,
     location_ID int not null,
     max_participants int not null,
+    current_participants int default 0,
     status enum("open", "closed", "pending", "void") not null default "pending",
 
     foreign key (club_ID) references Club(ID),
