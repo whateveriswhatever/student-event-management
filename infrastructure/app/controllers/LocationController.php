@@ -1,5 +1,4 @@
 <?php
-
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/location.php";
 
@@ -10,25 +9,37 @@
             $this->locationRepository = new LocationRepository();
         }
 
-        // GET /locations
+        /** GET /locations — Danh sách tất cả địa điểm */
         public function index(): void {
+            $this->requireAuth();
             $locations = $this->locationRepository->all();
-            $this->render('admin/locations', ['locations' => $locations]);
+            $this->render("admin/locations", ["locations" => $locations]);
         }
 
-        // POST /locations/create
+        /** POST /locations/create — Tạo địa điểm mới */
         public function store(): void {
-            $building = trim($_POST['building'] ?? '');
-            $room = trim($_POST['room'] ?? '');
-            $capacity = (int)($_POST['capacity'] ?? 0);
+            $this->requireAuth();
+            $building = $this->post("building");
+            $room     = $this->post("room");
+            $capacity = $this->postInt("capacity");
+
+            if (empty($building) || empty($room)) {
+                $this->render("admin/locations", [
+                    "error"     => "Tên tòa nhà và phòng không được để trống!",
+                    "locations" => $this->locationRepository->all()
+                ]);
+                return;
+            }
 
             try {
-                // This utilizes your custom logic throwing exceptions on special text patterns
                 $this->locationRepository->create($building, $room, $capacity);
-                header("Location: /locations?success=1");
-                exit;
+                $this->redirect("/final-project/infrastructure/locations?success=1");
             } catch (Exception $e) {
-                $this->render('admin/locations', ['error' => $e->getMessage(), 'locations' => $this->locationRepository->all()]);
+                $this->render("admin/locations", [
+                    "error"     => $e->getMessage(),
+                    "locations" => $this->locationRepository->all()
+                ]);
             }
         }
-}
+    }
+?>
