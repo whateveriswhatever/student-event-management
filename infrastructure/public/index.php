@@ -41,7 +41,7 @@
             "/"                         => ["ClubController", "index"],
             "/clubs"                    => ["ClubController", "index"],
             "/clubs/create"             => ["ClubController", "showCreateForm"],
-            "club/members"              => ["MembershipController", "clubMembers"],
+            "/club/members"             => ["MembershipController", "clubMembers"],
             "/events"                   => ["EventController", "index"],
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
