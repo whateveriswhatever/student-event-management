@@ -123,11 +123,11 @@
                 new DateTime()
             );
             $isSucess = $this->add([
-                "student_ID" => $membership->getStudentID(),
-                "club_ID" => $membership->getClubID(),
-                "joined_at" => $membership->getJoinedTimeline()->format("Y-m-d H:i:s"),
-                "status" => $membership->getStatus(),
-                "role_ID" => $membership->getRoleID()
+                "student_ID"       => $membership->getStudentID(),
+                "club_ID"          => $membership->getClubID(),
+                "joined_at"        => $membership->getJoinedTimeline()->format("Y-m-d H:i:s"),
+                "membership_status" => $membership->getStatus()->value,
+                "role_ID"          => $membership->getRoleID()
             ]);
 
             if (!$isSucess) throw new RuntimeException("Failed to create membership request");
@@ -156,55 +156,45 @@
         }
 
         public function findByID(int $id): ?Membership {
-            $rows = $this->findViaCriteria(["ID" => $id]);
-            if (empty($rows)) return null;
-
-            return $rows[0];
+            $row = $this->findOne(["ID" => $id]);
+            if ($row === null) return null;
+            return $this->hydrate($row);
         }
 
         public function findMembership(int $sID, int $cID): ?Membership {
-            $rows = $this->findViaCriteria([
-                "student_ID" => $sID,
-                "club_ID" => $cID
-            ]);
-            if (empty($rows)) return null;
-            return $rows[0];
+            $row = $this->findOne(["student_ID" => $sID, "club_ID" => $cID]);
+            if ($row === null) return null;
+            return $this->hydrate($row);
         }
 
         public function findAllMembersInAClub(int $cID): array {
             $rows = $this->findViaCriteria(["club_ID" => $cID]);
-            return array_map(
-                fn ($row) => $row, $rows
-            );
+            return array_map(fn($row) => $this->hydrate($row), $rows);
         }
 
         public function findAllMembershipFromAStudent(int $sID): array {
             $rows = $this->findViaCriteria(["student_ID" => $sID]);
-            return array_map(
-                fn ($row) => $row, $rows
-            );
+            return array_map(fn($row) => $this->hydrate($row), $rows);
         }
 
         public function approveMembership(int $id): bool {
-            return $this->updateViaCriteria([
-                "status" => (MembershipStatus::APPROVE)->value
-            ], ["ID" => $id]);
+            return $this->updateViaCriteria(["membership_status" => MembershipStatus::APPROVE->value], ["ID" => $id]);
         }
 
         public function rejectMembership(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::REJECT)->value], ["ID" => $id]);
+            return $this->updateViaCriteria(["membership_status" => MembershipStatus::REJECT->value], ["ID" => $id]);
         }
 
         public function pendingMembership(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::PENDING)->value], ["ID" => $id]);
+            return $this->updateViaCriteria(["membership_status" => MembershipStatus::PENDING->value], ["ID" => $id]);
         }
 
         public function membershipQuit(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::LEAVE)->value], ["ID" => $id]);
+            return $this->updateViaCriteria(["membership_status" => MembershipStatus::LEAVE->value], ["ID" => $id]);
         }
 
         public function prohibitMembership(int $id): bool {
-            return $this->updateViaCriteria(["status" => (MembershipStatus::PROHIBIT)->value], ["ID" => $id]);
+            return $this->updateViaCriteria(["membership_status" => MembershipStatus::PROHIBIT->value], ["ID" => $id]);
         }
 
         public function promoteMembershipRole(int $id, RoleTitle $t): bool {
