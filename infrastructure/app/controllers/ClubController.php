@@ -9,47 +9,51 @@
             $this->clubRepo = new ClubRepository();
         }
 
+        /** GET /clubs — Danh sách tất cả câu lạc bộ */
         public function index(): void {
-            $rawClubs = ($this->clubRepo)->all();
-
+            $rawClubs = $this->clubRepo->all();
             $this->render("clubs/index", ["clubs" => $rawClubs]);
         }
 
+        /** GET /clubs/create — Hiển thị form tạo câu lạc bộ mới */
+        public function showCreateForm(): void {
+            $this->requireAuth();
+            $this->render("clubs/create");
+        }
+
+        /** POST /clubs/create — Lưu câu lạc bộ mới */
         public function store(): void {
+            $this->requireAuth();
             if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-                $this->json(["error" => "Method not allowed"], 405);
+                $this->jsonError("Method not allowed", 405);
                 return;
             }
-
             try {
-                $name = trim($_POST["name"] ?? '');
-                $description = trim($_POST["description"] ?? '');
-                $logoURL = trim($_POST["logo_url"] ?? '');
-                $status = Status::from($_POST["status"] ?? "active");
-                $foundedDate = new DateTime($_POST["founded_date"] ?? "now");
+                $name        = $this->post("name");
+                $description = $this->post("description");
+                $logoURL     = $this->post("logo_url");
+                $status      = Status::from($this->post("status", "active"));
+                $foundedDate = new DateTime($this->post("founded_date", "now"));
 
-
-                $newClub = ($this->clubRepo)->create($name, $description, $foundedDate, $logoURL, $status);
+                $newClub = $this->clubRepo->create($name, $description, $foundedDate, $logoURL, $status);
                 if ($newClub) {
-                    // Redirect back to main page or return success
-                    header("Location: /clubs?success=1");
-                    exit;
+                    $this->redirect("/final-project/infrastructure/clubs?success=1");
                 }
-                $this->render("clubs/create", ["error" => "Couldn't save the club data!"]);
+                $this->render("clubs/create", ["error" => "Không thể lưu thông tin câu lạc bộ!"]);
             } catch (Exception $ex) {
                 $this->render("clubs/create", ["error" => $ex->getMessage()]);
             }
         }
 
-        public function showCreateForm(): void {
-            $this->render("clubs/create");
-        }
-
+        /** GET /clubs/view?id=X — Chi tiết một câu lạc bộ */
         public function view(): void {
-            $clubID = (int)($_GET["id"] ?? 0);
-            $club = ($this->clubRepo)->findByID($clubID);
+            $clubID = $this->queryInt("id");
+            if ($clubID < 1) {
+                $this->render("errors/400", ["message" => "ID câu lạc bộ không hợp lệ!"]);
+                return;
+            }
+            $club = $this->clubRepo->findByID($clubID);
             $this->render("clubs/view", ["club" => $club]);
         }
-
     }
 ?>
