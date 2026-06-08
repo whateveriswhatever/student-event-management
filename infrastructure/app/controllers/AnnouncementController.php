@@ -9,46 +9,55 @@
             $this->announcementRepo = new AnnouncementRepository();
         }
 
+        /** GET /announcements?club_ID=X — Danh sách thông báo của câu lạc bộ */
         public function index(): void {
-            $clubID = (int)($_GET["club_ID"] ?? 0);
+            $clubID = $this->queryInt("club_ID");
             if ($clubID < 1) {
-                throw new InvalidArgumentException("Missing or invalid club ID!");
+                $this->jsonError("Thiếu hoặc sai club ID!", 400);
+                return;
             }
-
-            $announements = ($this->announcementRepo)->findAllFromClubViaID($clubID);
+            $announcements = $this->announcementRepo->findAllFromClubViaID($clubID);
             $this->render("announcements/index", [
-                "announcements" => $announements,
-                "clubID" => $clubID
+                "announcements" => $announcements,
+                "clubID"        => $clubID
             ]);
         }
 
+        /** POST /announcements/create — Đăng thông báo mới */
         public function store(): void {
+            $this->requireAuth();
             if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-                header("Location: /");
-                exit;
+                $this->redirect("/");
+                return;
             }
 
-            $clubID = (int)($_POST["club_ID"] ?? 0);
-            $authorID = (int)($_POST["author_ID"] ?? 0);
-            $title = trim($_POST["title"] ?? "");
-            $description = trim($_POST["description"] ?? "");
+            $clubID      = $this->postInt("club_ID");
+            // Lấy authorID từ session — không tin tưởng POST data
+            $authorID    = (int)$this->getCurrentUserID();
+            $title       = $this->post("title");
+            $description = $this->post("description");
+
+            if ($clubID < 1 || $authorID < 1) {
+                $this->jsonError("Thông tin không hợp lệ!", 400);
+                return;
+            }
 
             try {
                 $announcement = new Announcement(null, $authorID, $clubID, $title, $description);
-
                 $payload = [
-                    "club_ID" => $clubID,
-                    "author_ID" => $authorID,
-                    "title" => $title,
+                    "club_ID"     => $clubID,
+                    "author_ID"   => $authorID,
+                    "title"       => $title,
                     "description" => $description
                 ];
-
-                if (($this->announcementRepo)->add($payload)) {
-                    header("Location: /announcements?club_ID={$clubID}&success=1");
-                    exit;
+                if ($this->announcementRepo->add($payload)) {
+                    $this->redirect("/final-project/infrastructure/announcements?club_ID={$clubID}&success=1");
                 }
             } catch (Exception $e) {
-                $this->render("announcements/create", ["error" => $e->getMessage(), "clubID" => $clubID]);
+                $this->render("announcements/create", [
+                    "error"  => $e->getMessage(),
+                    "clubID" => $clubID
+                ]);
             }
         }
     }
