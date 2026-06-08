@@ -1,37 +1,43 @@
 <?php
-    // Allows students to submit qualitative feedback or evaluations for an event they attend
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/feedback.php";
 
     class FeedbackController extends BaseController {
-        private FeedbackRepository $feedbackRepository;
+        private FeedBackRepository $feedbackRepository;
 
         public function __construct() {
-            $this->feedbackRepository = new FeedbackRepository();
+            $this->feedbackRepository = new FeedBackRepository();
         }
 
-        // POST /feedback/submit
+        /** POST /feedback/submit — Gửi đánh giá về sự kiện */
         public function store(): void {
-            $fromUserID = (int)($_POST['from_user_ID'] ?? 0);
-            $toUserID = (int)($_POST['to_user_ID'] ?? 0); // Target club coordinator/officer
-            $eventID = (int)($_POST['event_ID'] ?? 0);
-            $content = trim($_POST['content'] ?? '');
+            $this->requireAuth();
+
+            // Lấy fromUserID từ session — không trust POST data
+            $fromUserID = (int)$this->getCurrentUserID();
+            $toUserID   = $this->postInt("to_user_ID");
+            $eventID    = $this->postInt("event_ID");
+            $content    = $this->post("content");
+
+            if ($toUserID < 1 || $eventID < 1) {
+                $this->jsonError("Thông tin người nhận hoặc sự kiện không hợp lệ!", 400);
+                return;
+            }
+            if (empty($content)) {
+                $this->jsonError("Nội dung đánh giá không được để trống!", 400);
+                return;
+            }
+            if ($fromUserID === $toUserID) {
+                $this->jsonError("Không thể gửi đánh giá cho chính mình!", 400);
+                return;
+            }
 
             try {
-                $payload = [
-                    "from_user_ID" => $fromUserID,
-                    "to_user_ID" => $toUserID,
-                    "to_event_ID" => $eventID,
-                    "content" => $content,
-                    "timestamp" => (new DateTime())->format('Y-m-d H:i:s')
-                ];
-
-                if ($this->feedbackRepository->add($payload)) {
-                    header("Location: /events?id={$eventID}&feedback=submitted");
-                    exit;
-                }
+                $this->feedbackRepository->create($fromUserID, $toUserID, $eventID, $content);
+                $this->redirect("/final-project/infrastructure/events?id={$eventID}&feedback=submitted");
             } catch (Exception $e) {
-                $this->json(['error' => $e->getMessage()], 400);
+                $this->jsonError($e->getMessage(), 400);
             }
+        }
     }
-}
+?>
