@@ -5,6 +5,9 @@
     // Front router
     define("root_dir", dirname(__DIR__));
 
+    // Load env sớm để đọc cấu hình folder từ .env
+    require_once root_dir . "/config/env-config.php";
+
     // CORS config
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
@@ -13,7 +16,8 @@
     $requestURI = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
     $requestMethod = $_SERVER["REQUEST_METHOD"];
 
-    $folderName = "final-project";
+    // Đọc tên folder từ .env thay vì hard-code
+    $folderName = getProjectFolderName();
     $baseFolder = "/{$folderName}/infrastructure";
 
     // Strip the base folder from the URI
@@ -30,8 +34,6 @@
     if ($requestURI === "") {
         $requestURI = "/";
     }
-
-    echo "<div>Current request URI: {$requestURI}</div>";
 
     // Route registry [Method][Path] -> [ControllerClass, ControllerAction]
     $routes = [
@@ -85,7 +87,6 @@
         $actionName = $target[1];
 
         $controllerFile = root_dir . "/app/controllers/{$controllerName}.php";
-        echo "<div>Trying to find file at: {$controllerFile}</div>";
 
         if (file_exists($controllerFile)) {
             require_once $controllerFile;

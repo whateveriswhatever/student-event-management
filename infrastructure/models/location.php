@@ -100,7 +100,7 @@
             $isExisted = $this->isExist($id);
             if (!$isExisted) throw new InvalidArgumentException("ID is never existed!");
             if ($x < 10) throw new InvalidArgumentException("Minimum capacity for an event is 10!"); 
-            return $this->updateViaCriteria(["attendance_capcity" => $x], ["ID" => $id]);
+            return $this->updateViaCriteria(["attendance_capacity" => $x], ["ID" => $id]);
         }
 
         public function deleteLocation(int $id): bool {

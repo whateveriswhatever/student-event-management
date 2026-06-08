@@ -104,8 +104,8 @@
             return new Feedback(
                 (int)$row["from_user_ID"],
                 (int)$row["to_user_ID"],
-                (int)$row["on_event_ID"],
                 (string)$row["content"],
+                (int)$row["on_event_ID"],
                 new DateTime($row["at_timestamp"]),
                 (int)$row["ID"]
             );
@@ -160,7 +160,7 @@
 
         public function findAllFromEvent(int $eventID): array {
             $rows = $this->findViaCriteria([
-                "to_event_ID" => $eventID
+                "on_event_ID" => $eventID
             ]);
             return array_map(
                 fn ($row) => $this->hydrate($row), $rows

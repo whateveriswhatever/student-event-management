@@ -49,6 +49,46 @@
         }
 
         /*
+            POST /membership/apply
+            Sinh viên gửi đơn xin gia nhập câu lạc bộ (lấy studentID từ session)
+        */
+        public function apply(): void {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: /clubs');
+                exit;
+            }
+
+            // Lấy studentID từ session để tránh giả mạo POST data
+            if (!isset($_SESSION["user_ID"])) {
+                $this->redirect("/final-project/infrastructure/login");
+                return;
+            }
+
+            $studentID = (int)$_SESSION["user_ID"];
+            $clubID    = (int)($_POST["club_ID"] ?? 0);
+
+            if ($clubID < 1) {
+                $this->render("errors/400", ["message" => "Invalid or missing club ID!"]);
+                return;
+            }
+
+            // Mọi thành viên mới đều bắt đầu với role Member + quyền Regular
+            $role   = ($this->roleRepo)->create(RoleTitle::MEMBER, RolePermission::REGULAR);
+            $roleID = $role->getID();
+
+            try {
+                ($this->membershipRepo)->createJoinRequest($studentID, $clubID, $roleID);
+                header("Location: /final-project/infrastructure/clubs?msg=applied_successfully");
+                exit;
+            } catch (RuntimeException $ex) {
+                $this->render("clubs/index", [
+                    "error"  => $ex->getMessage(),
+                    "clubID" => $clubID
+                ]);
+            }
+        }
+
+        /*
             POST /membership/join
             Processes a student's application to join a club 
         */

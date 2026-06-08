@@ -102,7 +102,8 @@
         private RoleRepository $repo;
 
         public function __construct() {
-            parent::__construct("membership");
+            parent::__construct("Club_Membership");
+            $this->repo = new RoleRepository();
         }
 
         public function createJoinRequest(int $sID, int $cID, int $rID): Membership {

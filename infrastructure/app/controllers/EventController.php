@@ -11,6 +11,12 @@
             $this->registrationRepo = new EventRegistrationRepository();
         }
 
+        // GET /events
+        public function index(): void {
+            $events = ($this->eventRepo)->all();
+            $this->render("events/index", ["events" => $events]);
+        }
+
         // POST /events/register
         public function registerForEvent(): void {
             if ($_SERVER["REQUEST_METHOD"] !== "POST") {

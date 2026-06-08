@@ -12,3 +12,12 @@
     RewriteRule ^(.*)$ public/index.php [QSA,L]
 
 </IfModule>
+
+# Chặn truy cập trực tiếp vào file .env qua HTTP
+# Tránh lộ DB credentials khi deploy lên server
+<Files ".env">
+    Require all denied
+</Files>
+
+# NOTE (production): Đổi Access-Control-Allow-Origin trong index.php
+# từ "*" sang domain cụ thể trước khi deploy lên môi trường thật

@@ -69,11 +69,11 @@
             if (empty($data)) return [];
             return array_map(
                 fn($row) => new Announcement(
-                    $row["ID"],
-                    $row["club_ID"],
-                    $row["author_ID"],
-                    $row["title"],
-                    $row["description"]
+                    (int)$row["ID"],
+                    (int)$row["author_ID"],
+                    (int)$row["club_ID"],
+                    (string)$row["title"],
+                    (string)$row["description"]
                 ),
                 $data
             );

@@ -100,7 +100,7 @@
                 $newDataKeys = array_keys($updatedData);
                 $newDataVals = array_values($updatedData);
                 $keys = array_keys($critera);
-                $vals = array_keys($critera);
+                $vals = array_values($critera);
                 $where = implode(" and ", array_map(function ($key) {return "{$key} = :{$key}";}, $keys));
                 $setStmt = implode(" , ", array_map(function ($key) {return "{$key} = :{$key}";}, $newDataKeys));
                 $query = "

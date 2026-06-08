@@ -41,6 +41,10 @@
             }
         }
 
+        public function showCreateForm(): void {
+            $this->render("clubs/create");
+        }
+
         public function view(): void {
             $clubID = (int)($_GET["id"] ?? 0);
             $club = ($this->clubRepo)->findByID($clubID);

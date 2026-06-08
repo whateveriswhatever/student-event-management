@@ -228,7 +228,7 @@
         public function findAllFromClub(int $cID): array {
             $rows = $this->findViaCriteria(["club_ID" => $cID]);
             return array_map(
-                fn($row) => $this->$row, $rows
+                fn($row) => $this->hydrate($row), $rows
             );
         }
 
@@ -246,7 +246,7 @@
                 $eT = new DateTime($row["end_time"]);
 
                 $event = new Event(
-                    (int)$row["club_id"],
+                    (int)$row["club_ID"],
                     (string)$row["title"],
                     (string)$row["description"],
                     $eD,
@@ -286,7 +286,7 @@
         }
 
         private function setStudentID(int $sID): void {
-            if ($sID < 1) throw new InvalidArgumentException("Invalid event ID");
+            if ($sID < 1) throw new InvalidArgumentException("Invalid student ID");
             $this->studentID = $sID;
         }
 
@@ -307,8 +307,9 @@
         }
 
         public function setStatus(?RegisteredStatus $s, ?string $typeMarking = null): void {
-            if (($typeMarking || $typeMarking !== null) && ($s === null || !$s)) {
-                switch ($s) {
+            // Nếu truyền typeMarking (string) và không có enum $s → dùng typeMarking
+            if ($typeMarking !== null && $s === null) {
+                switch ($typeMarking) {
                     case "success":
                         $this->markSuccess();
                         break;
@@ -316,17 +317,24 @@
                         $this->markPending();
                         break;
                     case "reject":
+                    case "rejected":
                         $this->markReject();
                         break;
                     default:
                         $this->markPending();
                         break;
                 }
+                return;
             }
 
-            if ((!$typeMarking || $typeMarking === null) && ($s || $s !== null)) {
+            // Nếu truyền enum $s trực tiếp → gán thẳng
+            if ($s !== null) {
                 $this->status = $s;
+                return;
             }
+
+            // Mặc định: pending
+            $this->markPending();
         }
 
         public function getID(): ?int {return $this->ID;}
