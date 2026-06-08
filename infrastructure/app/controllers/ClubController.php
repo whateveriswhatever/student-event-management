@@ -12,12 +12,14 @@
         private MembershipRepository $membershipRepo;
         private RoleRepository $roleRepo;
         private LocationRepository $locationRepo;
+        private EventRegistrationRepository $eventRegisterRepo;
 
         public function __construct() {
             $this->clubRepo = new ClubRepository();
             $this->membershipRepo = new MembershipRepository();
             $this->roleRepo = new RoleRepository();
             $this->locationRepo = new LocationRepository();
+            $this->eventRegisterRepo = new EventRegistrationRepository();
         }
 
         public function index(): void {
@@ -224,13 +226,79 @@
                     $eventRepo = new EventRepository();
                     $rawEvents = $eventRepo->findViaCriteria(["club_ID" => $clubID]);
 
+                    /* Logic to automatically update the status of each event */
+                    $now = new DateTime();
+
+                    /* Event filtering via at a specific timeline */
+                    // Checking if the users are loading the page for the first time
+                    $isDefaultLoad = !isset($_GET["start_date"]) && !isset($_GET["end_date"]);
+
+                    $filterStartStr = $_GET["start_date"] ?? "";
+                    $filterEndStr = $_GET["end_date"] ?? "";
+
+                    // echo "<div>Initial starting date: {$filterStartStr}</div>";
+                    // echo "<div>Initial ending date: {$filterEndStr}</div>";
+
+                    if ($isDefaultLoad) {
+                        $filterStartStr = (new Datetime("monday this week"))->format("Y-m-d");
+                        $filterEndStr = (new Datetime("sunday this week"))->format("Y-m-d");
+                    }
+                    
+                    // echo "<div>Processing starting date: {$filterStartStr}</div>";
+                    // echo "<div>Processing ending date: {$filterEndStr}</div>";
+
+                    $filterStartDate = $filterStartStr ? new DateTime($filterStartStr) : null;
+                    $filterEndDate = $filterEndStr ? new DateTime($filterEndStr) : null;
+                    // Setting the end date to the very end of the day to ensure full-day coverage
+                    if ($filterStartDate) {
+                        $filterStartDate->setTime(0, 0, 0);
+                    }
+                    if ($filterEndDate) {
+                        $filterEndDate->setTime(23, 59, 59);
+                    }
+
                     foreach ($rawEvents as $row) {
                         $event = $eventRepo->hydrate($row);
-                        $eventLocationID = (int)$event->getLocationID();
-                        $eventAddress = ($this->locationRepo->findByID($eventLocationID))->getAddress();
-                        // echo "<div>Saving {$eventAddress} as value for location ID: {$eventLocationID}</div>";
-                        $eventAddressMapper[$eventLocationID] = $eventAddress;
-                        $events[] = $event;
+                        // Checking if the current student has already volunteered to the event yet
+                        $registration = (($this->eventRegisterRepo)->findViaCriteria([
+                            "event_ID" => $event->getID(),
+                            "student_ID" => $studentID]));
+                        
+                        $wasRegistered = empty($registration) ? false : true;
+                        
+                        if ($event->getStatus() === EventStatus::OPEN) {
+                            $datePart = $event->getEventDate()->format("Y-m-d");
+                            $timePart = $event->getEndTime()->format("H:i:s");
+                            $expirationTime = new DateTime($datePart . ' ' . $timePart);
+
+                            if ($now > $expirationTime) {
+                                $event->setStatus(EventStatus::CLOSED);
+                                $eventRepo->updateEventStatus($event->getID(), EventStatus::CLOSED);
+                            }
+                        }
+                        $includeEvent = true;
+                        $eventDate = $event->getEventDate();
+
+                        $dateStr = $eventDate->format("Y-m-d H:i:s");
+                        // echo "<div>Current retrieved event from the table: {$dateStr}</div>";
+
+                        if ($filterStartDate && $eventDate < $filterStartDate) {
+                            $includeEvent = false;
+                        }
+
+                        if ($filterEndDate && $eventDate > $filterEndDate) {
+                            $includeEvent = false;
+                        }
+
+                        if ($includeEvent) {
+                            $eventLocationID = (int)$event->getLocationID();
+                            $eventAddress = ($this->locationRepo->findByID($eventLocationID))->getAddress();
+                            // echo "<div>Saving {$eventAddress} as value for location ID: {$eventLocationID}</div>";
+                            $eventAddressMapper[$eventLocationID] = $eventAddress;
+                            // $events[] = $event;
+                            $events[] = [$event, $wasRegistered];
+                        }
+                        
                     }
                 }
             }
@@ -262,7 +330,9 @@
                 "events"                => $events,
                 "members"               => $membersList ?? [],
                 "currentUserRole"       => $currentUserRole,
-                "eventAddressMapper"    => $eventAddressMapper
+                "eventAddressMapper"    => $eventAddressMapper ?? [],
+                "filterStart"           => $filterStartStr ?? "",
+                "filterEnd"             => $filterEndStr ?? ""
             ]);
         }
     }

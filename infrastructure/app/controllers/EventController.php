@@ -5,7 +5,7 @@
 
     class EventController extends BaseController {
         private EventRepository $eventRepo;
-        private EventRegistrationRepository$registrationRepo;
+        private EventRegistrationRepository $registrationRepo;
         private LocationRepository $locationRepo;
 
         public function __construct() {
@@ -26,10 +26,20 @@
                 $studentID = (int)($_POST["student_ID"] ?? null);
                 $now = new DateTime();
 
-                $registration = ($this->registrationRepo)->register($eventID, $studentID, $now, "pending");
+                $event = ($this->eventRepo)->findByID($eventID);
+                $currParticipants = $event->getCurrParticipants();
+                $maxParticipants = $event->getMaxParticipants();
+
+                if ($currParticipants === $maxParticipants) {
+                    $this->json(["message" => "Failed to assign for the event owing to exceeding on maximum participants!"]);
+                }
+
+                $registration = ($this->registrationRepo)->register($eventID, $studentID, $now, "success");
 
                 if ($registration) {
                     $this->json(["message" => "Successfully reigstered for the new event!", "ID" => $registration->getID()]);
+                    // Updating the current participants and displaying it to the UI
+                    
                 } else {
                     $this->json(["error" => "Registration failed!"], 400);
                 }

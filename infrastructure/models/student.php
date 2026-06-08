@@ -285,7 +285,7 @@
 
         public function getAllJoinedClubs(int $sID): array {
             // Get all memberships
-            $clubIds = ($this->membershipRepo)->getJoinedClubIDOfAStudent($sID);
+            $clubIds = ($this->membershipRepo)->getAllJoinedClubIDsViaStudentID($sID);
             $clubs = [];
             for ($i = 0; $i < count($clubIds); $i++) {
                 $clubs[] = ($this->clubRepo)->findByID($clubIds[$i]);

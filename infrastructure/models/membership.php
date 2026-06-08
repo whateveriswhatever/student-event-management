@@ -264,6 +264,12 @@
             return $data;
         }
 
-        
+        public function getAllJoinedClubIDsViaStudentID(int $sID): array {
+            $rows = $this->findViaCriteria(["student_ID" => $sID]);
+            $clubIDs = array_map(
+                fn ($row) => (int)$row["club_ID"], $rows
+            );
+            return $clubIDs;
+        }
     }
 ?>

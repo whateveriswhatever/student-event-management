@@ -129,11 +129,7 @@
         }
 
         public function setStatus(EventStatus $x): void {
-            if ($x === null) {
-                $this->status = EventStatus::VOID;
-            } else {
-                $this->status = $x;
-            }
+            $this->status = $x;
         }
 
         public function getID(): ?int {
@@ -288,6 +284,22 @@
                 throw new RuntimeException("Invalid founded date!");
             }
         }
+
+        public function updateEventStatus(int $eID, EventStatus $status): bool {
+            return $this->updateViaCriteria(
+                ["status" => $status->value], 
+                ["ID" => $eID]);
+        }
+
+        public function increaseCurrentParticipants(int $eID): bool {
+            $event = $this->findByID($eID);
+            $curr = $event->getCurrParticipants();
+            $curr++;
+            return $this->updateViaCriteria(
+                ["current_participants" => $curr],
+                ["ID" => $eID]
+            );
+        }
     }
 
     class EventRegistration {
@@ -332,6 +344,11 @@
         }
 
         public function setStatus(?RegisteredStatus $s, ?string $typeMarking = null): void {
+            /* 
+                Constraints:
+                    - Students are free to assign for any events they favour.
+                    - They get rejected only when the current amount of participants reach to defined limit.
+            */
             if (($typeMarking || $typeMarking !== null) && ($s === null || !$s)) {
                 switch ($s) {
                     case "success":
@@ -375,25 +392,26 @@
                 $eID,
                 $sID,
                 $rdAt,
-                $s
+                RegisteredStatus::from($s)
             );
             $isSuccess = $this->add([
                 "event_ID" => $registration->getEventID(),
                 "student_ID" => $registration->getStudentID(),
                 "registered_at" => $registration->getRegisteredAt()->format("Y-m-d H:i:s"),
-                "registration_status" => $registration->getStatus()
+                "registration_status" => $registration->getStatus()->value
             ]);
             
             if (!$isSuccess) {
                 throw new RuntimeException("Failed to register for new event!");
             }
-
+            // Increasing the current participants of the registed event
+            $isIncrease = ($this->eventRepo)->increaseCurrentParticipants($registration->getEventID());
             $generatedID = (int)$this->dbConnection->lastInsertId();
             return new EventRegistration(
                 $eID,
                 $sID,
                 $rdAt,
-                $s,
+                RegisteredStatus::from($s),
                 $generatedID
             );
         }
@@ -441,15 +459,6 @@
                 fn ($id) =>($this->eventRepo)->findByID($id), $eventIds
             );
             return $events;
-        }
-
-        public function increaseCurrParticipants(int $eID): bool {
-            $rows = $this->findViaCriteria(["ID" => $eID]);
-            if (empty($rows)) throw new InvalidArgumentException("The event with ID: {$eID} doesn't exit!");
-            $curr = (int)($rows[0])["current_participants"];
-            $curr++;
-            $isSuccess = $this->updateViaCriteria(["current_participants" => $curr], ["ID" => $eID]);
-            return $isSuccess;
         }
     }
 ?>

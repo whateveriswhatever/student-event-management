@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const memberBadges = document.querySelectorAll(".member-count-badge");
 
   // Triggered when clicking on any club's member span tag
+
   memberBadges.forEach((badge) => {
     badge.addEventListener("click", () => {
       const clubID = badge.getAttribute("data-club-id");
@@ -81,5 +82,34 @@ document.addEventListener("DOMContentLoaded", () => {
           "'": "&#39;",
         })[m],
     );
+  }
+
+  /* Create Event Modal Logic  */
+  const createEventBtn = document.getElementById("open-create-event-btn");
+  const createEventModal = document.getElementById("create-event-modal");
+  const closeEventModalBtn = document.getElementById("close-event-modal-btn");
+  console.log("Searching for buttons...");
+  if (createEventBtn && createEventModal && closeEventModalBtn) {
+    console.log("Found all buttons!");
+    // Opening the modal
+    createEventBtn.addEventListener("click", () => {
+      createEventModal.style.display = "flex";
+      setTimeout(() => createEventModal.classList.add("show"), 10);
+    });
+
+    // Closing the modal
+    const hideEventModal = () => {
+      createEventModal.classList.remove("show");
+      setTimeout(() => {
+        createEventModal.style.display = "none";
+      }, 250);
+    };
+
+    closeEventModalBtn.addEventListener("click", hideEventModal);
+    createEventModal.addEventListener("click", (e) => {
+      if (e.target === createEventModal) {
+        hideEventModal();
+      }
+    });
   }
 });
