@@ -37,8 +37,8 @@ create table Student (
 
 create table Location (
     ID int auto_increment primary key,
-    building varchar(20) not null,
-    room varchar(4) not null,
+    building varchar(55) not null,
+    room varchar(55) not null,
     attendance_capacity int not null
 );
 
