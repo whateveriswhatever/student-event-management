@@ -31,19 +31,31 @@
         }
 
         private function setID(int $id): void {
-            $this->setIDForAutoIncrementType($this->ID, $id);
+            if ($id <= 0) {
+                throw new InvalidArgumentException("Invalid ID: must be greater than 0!");
+            }
+            $this->ID = $id;
         }
 
         private function setStudentID(int $id): void {
-            $this->setIDForAutoIncrementType($this->studentID, $id);
+            if ($id <= 0) {
+                throw new InvalidArgumentException("Invalid student ID: must be greater than 0!");
+            }
+            $this->studentID = $id;
         }
 
         private function setClubID(int $id): void {
-            $this->setIDForAutoIncrementType($this->clubID, $id);
+            if ($id <= 0) {
+                throw new InvalidArgumentException("Invalid club ID: must be greater than 0!");
+            }
+            $this->clubID = $id;
         }
 
         private function setRoleID(int $id): void {
-            $this->setIDForAutoIncrementType($this->roleID, $id);
+            if ($id <= 0) {
+                throw new InvalidArgumentException("Invalid role ID: must be greater than 0!");
+            }
+            $this->roleID = $id;
         }
 
         private function setJoinedTimeline(DateTime $x): void {

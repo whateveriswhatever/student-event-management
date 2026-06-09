@@ -251,7 +251,7 @@
         }
 
         /** Set ID có validate — dùng cho các entity có auto-increment PK */
-        public function setIDForAutoIncrementType(int &$x, int $y): void {
+        public function setIDForAutoIncrementType(&$x, int $y): void {
             if (!$this->validateIDForAutoIncrement($y)) {
                 throw new InvalidArgumentException("Invalid ID: must be greater than 0!");
             }
