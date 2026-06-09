@@ -15,7 +15,7 @@
             $this->setCapacity($a);
         }
 
-        private function setID(int $id): void {
+        private function setID(?int $id): void {
             if ($id !== null) {
                 $this->ID = $id;
             }

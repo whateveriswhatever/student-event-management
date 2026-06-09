@@ -49,7 +49,7 @@
                         // $loc có thể là Location object hoặc array raw
                         $building = htmlspecialchars(is_array($loc) ? $loc["building"] : $loc->getBuilding());
                         $room     = htmlspecialchars(is_array($loc) ? $loc["room"] : $loc->getRoom());
-                        $capacity = is_array($loc) ? $loc["attendance_capacity"] : $loc->getCapacity();
+                        $capacity = is_array($loc) ? $loc["attendance_capacity"] : $loc->getMaximumCapacity();
                     ?>
                     <tr>
                         <td><?= $i + 1 ?></td>
