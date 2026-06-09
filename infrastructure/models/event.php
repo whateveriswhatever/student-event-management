@@ -76,18 +76,15 @@
         }
 
         private function setStartTime(DateTime $sT): void {
-            if ($this->getEndTime() !== null) {
-                if ($sT > $this->getEndTime()) throw new RuntimeException("Invalid time!");
-                $this->startTime = $sT;
-            } else {
-                $this->startTime = $sT;
+            if (isset($this->endTime)) {
+                if ($sT > $this->endTime) throw new RuntimeException("Invalid time!");
             }
+            $this->startTime = $sT;
         }
 
         private function setEndTime(DateTime $eT): void {
-            if ($this->getStartTime() !== null) {
-                if ($eT < $this->getEndTime()) throw new RuntimeException("Invalid time!");
-                $this->endTime = $eT;
+            if (isset($this->startTime)) {
+                if ($eT < $this->startTime) throw new RuntimeException("Invalid time!");
             }
             $this->endTime = $eT;
         }
@@ -195,8 +192,8 @@
                 "title" => $event->getTitle(),
                 "description" => $event->getDescription(),
                 "event_date" => $event->getEventDate()->format("Y-m-d"),
-                "start_time" => $event->getStartTime(),
-                "end_time" => $event->getEndTime(),
+                "start_time" => $event->getStartTime()->format("Y-m-d H:i:s"),
+                "end_time" => $event->getEndTime()->format("Y-m-d H:i:s"),
                 "location_ID" => $event->getLocationID(),
                 "max_participants" => $event->getMaxParticipants(),
                 "status" => ($event->getStatus())->value
@@ -272,12 +269,16 @@
         private DateTime $registeredAt;
         private RegisteredStatus $status;
 
-        public function __construct(int $eID, int $sID, DateTime $rdAt, ?RegisteredStatus $s = null, ?int $id = null) {
+        public function __construct(int $eID, int $sID, DateTime $rdAt, $s = null, ?int $id = null) {
             $this->ID = $id;
             $this->setEventID($eID);
             $this->setStudentID($sID);
             $this->setRegisteredTime($rdAt);
-            $this->setStatus($s);
+            if ($s instanceof RegisteredStatus) {
+                $this->setStatus($s);
+            } else {
+                $this->setStatus(null, $s);
+            }
         }
 
         private function setEventID(int $eID): void {
@@ -362,7 +363,7 @@
                 "event_ID" => $registration->getEventID(),
                 "student_ID" => $registration->getStudentID(),
                 "registered_at" => $registration->getRegisteredAt()->format("Y-m-d H:i:s"),
-                "registration_status" => $registration->getStatus()
+                "registration_status" => $registration->getStatus()->value
             ]);
             
             if (!$isSuccess) {
