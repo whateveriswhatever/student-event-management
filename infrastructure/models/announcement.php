@@ -3,7 +3,7 @@
     require_once root_dir . "/config/database-config.php";
 
     class Announcement {
-        private int $ID;
+        private ?int $ID = null;
         private int $authorID;
         private int $clubID;
         private string $title;
@@ -17,12 +17,13 @@
             $this->assignID($id);
         }
 
-        private function assignID(int $id): void {
-            if ($this->ID !== null) {
-                throw new LogicException("ID already assigned!");
+        private function assignID(?int $id): void {
+            if ($id !== null) {
+                if (isset($this->ID) && $this->ID !== null) {
+                    throw new LogicException("ID already assigned!");
+                }
+                $this->ID = $id;
             }
-
-            $this->ID = $id;
         }
 
         private function setAuthorID(int $id): void {
@@ -45,7 +46,7 @@
             $this->clubID = $id;
         }
 
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {return $this->ID;}
         public function getAuthorID(): int {return $this->authorID;}
         public function getTitle(): string {return $this->title;}
         public function getContent(): string {return $this->description;}

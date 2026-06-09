@@ -21,7 +21,7 @@
             $this->setAttendanceStatus($s);
         }
 
-        private function setID(int $id): void {
+        private function setID(?int $id): void {
             if ($id !== null && $id > 0) $this->ID = $id; 
         }
 

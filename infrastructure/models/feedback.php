@@ -19,15 +19,13 @@
             $this->setEventDate($t);
         }
 
-        private function setID(int $id): void {
-            if ($id !== null && $id < 1) {
-
-            throw new InvalidArgumentException(
-                "Invalid feedback ID"
-            );
-        }
-
-            $this->ID = $id;
+        private function setID(?int $id): void {
+            if ($id !== null) {
+                if ($id < 1) {
+                    throw new InvalidArgumentException("Invalid feedback ID");
+                }
+                $this->ID = $id;
+            }
         } 
 
         private function setFromID(int $id): void {
@@ -85,7 +83,7 @@
             $this->timestamp = $t;
         }
 
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {return $this->ID;}
         public function getFromID(): int {return $this->fromID;}
         public function getToID(): int {return $this->toID;}
         public function getEventID(): int {return $this->onEventID;}
