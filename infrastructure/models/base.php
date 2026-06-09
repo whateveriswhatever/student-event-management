@@ -17,7 +17,7 @@
         /** Lấy toàn bộ bản ghi của bảng */
         public function all(): array {
             try {
-                $stmt = $this->dbConnection->prepare("SELECT * FROM {$this->tableName}");
+                $stmt = $this->dbConnection->prepare("SELECT * FROM `{$this->tableName}`");
                 $stmt->execute();
                 return $stmt->fetchAll(PDO::FETCH_ASSOC);
             } catch (PDOException $ex) {
@@ -37,7 +37,7 @@
                     $params[":{$keys[$i]}"] = $vals[$i];
                 }
                 $stmt = $this->dbConnection->prepare(
-                    "SELECT * FROM {$this->tableName} WHERE {$where}"
+                    "SELECT * FROM `{$this->tableName}` WHERE {$where}"
                 );
                 $stmt->execute($params);
                 return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -59,7 +59,7 @@
                 // Tên cột không thể bind bằng prepared statement — dùng whitelist
                 $selectCols = implode(', ', $cols);
                 $stmt = $this->dbConnection->prepare(
-                    "SELECT {$selectCols} FROM {$this->tableName}"
+                    "SELECT {$selectCols} FROM `{$this->tableName}`"
                 );
                 $stmt->execute();
                 return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -78,7 +78,7 @@
             try {
                 if (empty($criteria)) {
                     $stmt = $this->dbConnection->prepare(
-                        "SELECT COUNT(*) AS total FROM {$this->tableName}"
+                        "SELECT COUNT(*) AS total FROM `{$this->tableName}`"
                     );
                     $stmt->execute();
                 } else {
@@ -90,7 +90,7 @@
                         $params[":{$keys[$i]}"] = $vals[$i];
                     }
                     $stmt = $this->dbConnection->prepare(
-                        "SELECT COUNT(*) AS total FROM {$this->tableName} WHERE {$where}"
+                        "SELECT COUNT(*) AS total FROM `{$this->tableName}` WHERE {$where}"
                     );
                     $stmt->execute($params);
                 }
@@ -128,7 +128,7 @@
                     $params[":{$cols[$i]}"] = $vals[$i];
                 }
                 $stmt = $this->dbConnection->prepare(
-                    "INSERT INTO {$this->tableName} ({$insertedCols}) VALUES ({$bindParams})"
+                    "INSERT INTO `{$this->tableName}` ({$insertedCols}) VALUES ({$bindParams})"
                 );
                 return $stmt->execute($params);
             } catch (PDOException $ex) {
@@ -158,7 +158,7 @@
                 }
 
                 $stmt = $this->dbConnection->prepare(
-                    "UPDATE {$this->tableName} SET {$setStmt} WHERE {$where}"
+                    "UPDATE `{$this->tableName}` SET {$setStmt} WHERE {$where}"
                 );
                 return $stmt->execute($params);
             } catch (PDOException $ex) {
@@ -178,7 +178,7 @@
                     $params[":{$keys[$i]}"] = $vals[$i];
                 }
                 $stmt = $this->dbConnection->prepare(
-                    "DELETE FROM {$this->tableName} WHERE {$where}"
+                    "DELETE FROM `{$this->tableName}` WHERE {$where}"
                 );
                 return $stmt->execute($params);
             } catch (PDOException $ex) {
