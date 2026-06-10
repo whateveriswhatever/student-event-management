@@ -11,7 +11,7 @@
          */
         protected function requireAuth(): void {
             if (!isset($_SESSION["user_ID"]) || empty($_SESSION["user_ID"])) {
-                $this->redirect("/final-project/infrastructure/login");
+                $this->redirect(BASE_URL . "/login");
             }
         }
 

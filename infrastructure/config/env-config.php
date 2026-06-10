@@ -31,6 +31,10 @@
 		return $_ENV["PROJECT_FOLDER_NAME"];
 	}
 
+	if (!defined("BASE_URL")) {
+		define("BASE_URL", "/" . getProjectFolderName() . "/infrastructure");
+	}
+
 	class EnvLoader {
 		private array $env = [];
 
