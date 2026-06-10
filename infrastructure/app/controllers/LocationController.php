@@ -33,7 +33,7 @@
 
             try {
                 $this->locationRepository->create($building, $room, $capacity);
-                $this->redirect("/final-project/infrastructure/locations?success=1");
+                $this->redirect(BASE_URL . "/locations?success=1");
             } catch (Exception $e) {
                 $this->render("admin/locations", [
                     "error"     => $e->getMessage(),

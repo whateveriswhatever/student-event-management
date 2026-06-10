@@ -36,7 +36,7 @@
                     "attendance_status" => AttendanceStatus::CHECKIN->value
                 ];
                 if ($this->attendanceRepository->add($payload)) {
-                    $referer = $_SERVER["HTTP_REFERER"] ?? "/final-project/infrastructure/";
+                    $referer = $_SERVER["HTTP_REFERER"] ?? BASE_URL . "/";
                     $this->redirect($referer . "&checkin=success");
                 }
             } catch (Exception $e) {

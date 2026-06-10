@@ -45,7 +45,7 @@
                 );
 
                 if ($student) {
-                    $this->redirect("/final-project/infrastructure/login");
+                    $this->redirect(BASE_URL . "/login");
                 }
                 $this->render("auth/login_register", ["error" => "Không thể tạo tài khoản!"]);
             } catch (Exception $ex) {
@@ -84,7 +84,7 @@
                 $_SESSION["userLastname"] = $student->getLastname();
                 $_SESSION["userFullName"] = $student->getName();
 
-                $this->redirect("/final-project/infrastructure/");
+                $this->redirect(BASE_URL . "/");
             } catch (Exception $ex) {
                 $this->render("auth/login_register", ["error" => $ex->getMessage()]);
             }
@@ -94,7 +94,7 @@
         public function showAuthPage(): void {
             // Nếu đã đăng nhập thì chuyển thẳng về trang chủ
             if ($this->isAuthenticated()) {
-                $this->redirect("/final-project/infrastructure/");
+                $this->redirect(BASE_URL . "/");
             }
             $this->render("auth/login_register");
         }
@@ -113,7 +113,7 @@
                 );
             }
             session_destroy();
-            $this->redirect("/final-project/infrastructure/login");
+            $this->redirect(BASE_URL . "/login");
         }
     }
 ?>

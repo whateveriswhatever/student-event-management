@@ -51,7 +51,7 @@
                     "description" => $description
                 ];
                 if ($this->announcementRepo->add($payload)) {
-                    $this->redirect("/final-project/infrastructure/announcements?club_ID={$clubID}&success=1");
+                    $this->redirect(BASE_URL . "/announcements?club_ID={$clubID}&success=1");
                 }
             } catch (Exception $e) {
                 $this->render("announcements/create", [

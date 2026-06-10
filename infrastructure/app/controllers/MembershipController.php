@@ -51,7 +51,7 @@
         public function apply(): void {
             $this->requireAuth();
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                $this->redirect("/final-project/infrastructure/clubs");
+                $this->redirect(BASE_URL . "/clubs");
                 return;
             }
 
@@ -67,7 +67,7 @@
             // Kiểm tra đã là thành viên chưa
             $existing = $this->membershipRepo->findMembership($studentID, $clubID);
             if ($existing !== null) {
-                $this->redirect("/final-project/infrastructure/clubs?msg=already_member");
+                $this->redirect(BASE_URL . "/clubs?msg=already_member");
                 return;
             }
 
@@ -76,7 +76,7 @@
 
             try {
                 $this->membershipRepo->createJoinRequest($studentID, $clubID, $roleID);
-                $this->redirect("/final-project/infrastructure/clubs?msg=applied_successfully");
+                $this->redirect(BASE_URL . "/clubs?msg=applied_successfully");
             } catch (RuntimeException $ex) {
                 $this->render("clubs/index", [
                     "error"  => $ex->getMessage(),
@@ -127,7 +127,7 @@
             }
 
             if ($isSuccess) {
-                $fallbackURL = $_SERVER["HTTP_REFERER"] ?? "/final-project/infrastructure/clubs";
+                $fallbackURL = $_SERVER["HTTP_REFERER"] ?? BASE_URL . "/clubs";
                 $this->redirect($fallbackURL);
             } else {
                 $this->render("errors/500", [

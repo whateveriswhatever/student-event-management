@@ -34,7 +34,7 @@
 
             try {
                 $this->feedbackRepository->create($fromUserID, $toUserID, $eventID, $content);
-                $this->redirect("/final-project/infrastructure/events?id={$eventID}&feedback=submitted");
+                $this->redirect(BASE_URL . "/events?id={$eventID}&feedback=submitted");
             } catch (Exception $e) {
                 $this->jsonError($e->getMessage(), 400);
             }

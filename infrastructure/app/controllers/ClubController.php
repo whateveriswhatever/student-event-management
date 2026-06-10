@@ -37,7 +37,7 @@
 
                 $newClub = $this->clubRepo->create($name, $description, $foundedDate, $logoURL, $status);
                 if ($newClub) {
-                    $this->redirect("/final-project/infrastructure/clubs?success=1");
+                    $this->redirect(BASE_URL . "/clubs?success=1");
                 }
                 $this->render("clubs/create", ["error" => "Không thể lưu thông tin câu lạc bộ!"]);
             } catch (Exception $ex) {
