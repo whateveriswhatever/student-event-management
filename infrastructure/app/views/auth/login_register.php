@@ -10,7 +10,7 @@
 </head>
 <body>
 
-    <!-- 1. Header Banner VNU-IS - Định hướng Quản lý CLB & Sự kiện -->
+    <!-- 1. Header Banner VNU-IS -->
     <header class="is-header">
         <div class="header-container">
             <div class="logo-area">
@@ -33,11 +33,11 @@
     <!-- 2. Nav tabs bar - Các mục liên quan đến CLB & Sự kiện -->
     <nav class="is-navbar">
         <div class="navbar-container">
-            <a href="#" class="nav-tab active">TIN HOẠT ĐỘNG</a>
-            <a href="#" class="nav-tab">SỰ KIỆN MỚI</a>
-            <a href="#" class="nav-tab">DANH SÁCH CÂU LẠC BỘ</a>
-            <a href="#" class="nav-tab">BIỂU MẪU ĐĂNG KÝ</a>
-            <a href="#" class="nav-tab">HƯỚNG DẪN HỘI VIÊN</a>
+            <a href="#" class="nav-tab active" data-target="tab-news">TIN HOẠT ĐỘNG</a>
+            <a href="#" class="nav-tab" data-target="tab-events">SỰ KIỆN MỚI</a>
+            <a href="#" class="nav-tab" data-target="tab-clubs">DANH SÁCH CÂU LẠC BỘ</a>
+            <a href="#" class="nav-tab" data-target="tab-forms">BIỂU MẪU ĐĂNG KÝ</a>
+            <a href="#" class="nav-tab" data-target="tab-guides">HƯỚNG DẪN HỘI VIÊN</a>
         </div>
     </nav>
 
@@ -45,50 +45,241 @@
     <main class="portal-body">
         <div class="portal-container">
             
-            <!-- Left Column: Announcements - Các tin sự kiện và hoạt động thực tế -->
+            <!-- Left Column: Announcements container with tabbed content -->
             <section class="announcements-column">
                 
-                <div class="announcement-item">
-                    <div class="date-badge">
-                        <span class="badge-month">Tháng 06</span>
-                        <span class="badge-day">09</span>
+                <!-- TAB 1: TIN HOẠT ĐỘNG -->
+                <div class="tab-content-section" id="tab-news">
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 06</span>
+                            <span class="badge-day">09</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">THÔNG BÁO: MỞ ĐĂNG KÝ THÀNH VIÊN MỚI CHO CÁC CÂU LẠC BỘ ĐỢT 1 NĂM HỌC 2026-2027</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
                     </div>
-                    <div class="announcement-content">
-                        <a href="#" class="announcement-title">THÔNG BÁO: MỞ ĐĂNG KÝ THÀNH VIÊN MỚI CHO CÁC CÂU LẠC BỘ ĐỢT 1 NĂM HỌC 2026-2027</a>
-                        <a href="#" class="detail-link">Xem chi tiết</a>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 06</span>
+                            <span class="badge-day">08</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">SỰ KIỆN: SEMINAR ĐỊNH HƯỚNG PHÁT TRIỂN SỰ NGHIỆP TRONG KỶ NGUYÊN AI DO CLB TIN HỌC TỔ CHỨC</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 06</span>
+                            <span class="badge-day">08</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">HƯỚNG DẪN: QUY TRÌNH ĐĂNG KÝ TỔ CHỨC SỰ KIỆN NỘI BỘ VÀ XIN KINH PHÍ HỖ TRỢ HOẠT ĐỘNG CLB</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 06</span>
+                            <span class="badge-day">04</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">TIN TỨC: ĐỘI VĂN NGHỆ XUNG KÍCH TRƯỜNG QUỐC TẾ ĐẠT GIẢI NHẤT LIÊN HOAN CA KHÚC SINH VIÊN ĐHQGHN</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
                     </div>
                 </div>
 
-                <div class="announcement-item">
-                    <div class="date-badge">
-                        <span class="badge-month">Tháng 06</span>
-                        <span class="badge-day">08</span>
+                <!-- TAB 2: SỰ KIỆN MỚI -->
+                <div class="tab-content-section hidden" id="tab-events">
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 06</span>
+                            <span class="badge-day">20</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Đại hội Thể thao Sinh viên VNU-IS Sport Festival 2026 - Đăng ký tham gia tranh tài</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
                     </div>
-                    <div class="announcement-content">
-                        <a href="#" class="announcement-title">SỰ KIỆN: SEMINAR ĐỊNH HƯỚNG PHÁT TRIỂN SỰ NGHIỆP TRONG KỶ NGUYÊN AI DO CLB TIN HỌC TỔ CHỨC</a>
-                        <a href="#" class="detail-link">Xem chi tiết</a>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 06</span>
+                            <span class="badge-day">25</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Cuộc thi VNU-IS Hackathon 2026 - Lập trình ứng dụng công nghệ xanh vì cộng đồng</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 07</span>
+                            <span class="badge-day">02</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Ngày hội giao lưu văn hóa quốc tế International Culture Day 2026 tại khuôn viên Hòa Lạc</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Tháng 07</span>
+                            <span class="badge-day">15</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Hoạt động Hiến máu nhân đạo thường niên - Chủ nhật Đỏ VNU-IS năm 2026</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
                     </div>
                 </div>
 
-                <div class="announcement-item">
-                    <div class="date-badge">
-                        <span class="badge-month">Tháng 06</span>
-                        <span class="badge-day">08</span>
+                <!-- TAB 3: DANH SÁCH CÂU LẠC BỘ -->
+                <div class="tab-content-section hidden" id="tab-clubs">
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">CLB</span>
+                            <span class="badge-day">01</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">CLB Tin học (IS-Tech Club) - Cộng đồng nghiên cứu lập trình phần mềm, AI và phát triển Web</a>
+                            <a href="#" class="detail-link">Tìm hiểu thêm</a>
+                        </div>
                     </div>
-                    <div class="announcement-content">
-                        <a href="#" class="announcement-title">HƯỚNG DẪN: QUY TRÌNH ĐĂNG KÝ TỔ CHỨC SỰ KIỆN NỘI BỘ VÀ XIN KINH PHÍ HỖ TRỢ HOẠT ĐỘNG CLB</a>
-                        <a href="#" class="detail-link">Xem chi tiết</a>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">CLB</span>
+                            <span class="badge-day">02</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">CLB Nghệ thuật (IS-Art Club) - Sân chơi nghệ thuật gồm đội Hát, đội Vũ đạo và đội Nhạc cụ</a>
+                            <a href="#" class="detail-link">Tìm hiểu thêm</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">CLB</span>
+                            <span class="badge-day">03</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">CLB Tiếng Anh (IS-English Club) - Phát triển kỹ năng giao tiếp tiếng Anh, thuyết trình và biện luận</a>
+                            <a href="#" class="detail-link">Tìm hiểu thêm</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">CLB</span>
+                            <span class="badge-day">04</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">CLB Thể thao (IS-Sport Club) - Tập hợp các đội tuyển bóng đá, bóng rổ, cầu lông và cờ vua của trường</a>
+                            <a href="#" class="detail-link">Tìm hiểu thêm</a>
+                        </div>
                     </div>
                 </div>
 
-                <div class="announcement-item">
-                    <div class="date-badge">
-                        <span class="badge-month">Tháng 06</span>
-                        <span class="badge-day">04</span>
+                <!-- TAB 4: BIỂU MẪU ĐĂNG KÝ -->
+                <div class="tab-content-section hidden" id="tab-forms">
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Mẫu</span>
+                            <span class="badge-day">01</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Mẫu 01: Đơn xin thành lập Câu lạc bộ sinh viên mới và quy định kèm theo</a>
+                            <a href="#" class="detail-link">Tải về (.docx)</a>
+                        </div>
                     </div>
-                    <div class="announcement-content">
-                        <a href="#" class="announcement-title">TIN TỨC: ĐỘI VĂN NGHỆ XUNG KÍCH TRƯỜNG QUỐC TẾ ĐẠT GIẢI NHẤT LIÊN HOAN CA KHÚC SINH VIÊN ĐHQGHN</a>
-                        <a href="#" class="detail-link">Xem chi tiết</a>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Mẫu</span>
+                            <span class="badge-day">02</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Mẫu 02: Phiếu đăng ký ứng cử vào Ban chủ nhiệm Câu lạc bộ nhiệm kỳ mới</a>
+                            <a href="#" class="detail-link">Tải về (.docx)</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Mẫu</span>
+                            <span class="badge-day">03</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Mẫu 03: Tờ trình phê duyệt kế hoạch tổ chức sự kiện và đề xuất kinh phí hỗ trợ</a>
+                            <a href="#" class="detail-link">Tải về (.docx)</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">Mẫu</span>
+                            <span class="badge-day">04</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Mẫu 04: Biên bản nghiệm thu sự kiện và báo cáo tổng kết hoạt động định kỳ của CLB</a>
+                            <a href="#" class="detail-link">Tải về (.docx)</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: HƯỚNG DẪN HỘI VIÊN -->
+                <div class="tab-content-section hidden" id="tab-guides">
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">HD</span>
+                            <span class="badge-day">01</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Hướng dẫn đăng ký cấp Giấy chứng nhận tham gia hoạt động ngoại khóa trực tuyến</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">HD</span>
+                            <span class="badge-day">02</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Cẩm nang hướng dẫn sử dụng hệ thống đăng ký câu lạc bộ và quét mã điểm danh sự kiện</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">HD</span>
+                            <span class="badge-day">03</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Quy chế chi tiêu tài chính nội bộ và quy trình tài trợ sự kiện dành cho các câu lạc bộ</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
+                    </div>
+
+                    <div class="announcement-item">
+                        <div class="date-badge">
+                            <span class="badge-month">HD</span>
+                            <span class="badge-day">04</span>
+                        </div>
+                        <div class="announcement-content">
+                            <a href="#" class="announcement-title">Quy định về việc bảo quản, đăng ký mượn trang thiết bị phục vụ văn nghệ và sự kiện sinh viên</a>
+                            <a href="#" class="detail-link">Xem chi tiết</a>
+                        </div>
                     </div>
                 </div>
 
@@ -237,7 +428,7 @@
 
     <script src="<?= ASSET_URL ?>/assets/js/LoginRegister.js"></script>
     <script>
-        // Simple JS helper to mock captcha change
+        // Capcha refresh logic
         document.querySelector('.btn-refresh').addEventListener('click', function() {
             const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let mockCaptcha = '';
@@ -245,6 +436,23 @@
                 mockCaptcha += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             document.querySelector('.captcha-text').textContent = mockCaptcha;
+        });
+
+        // Tab switching logic
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Remove active class from all tabs
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all tab content sections
+                document.querySelectorAll('.tab-content-section').forEach(sec => sec.classList.add('hidden'));
+                // Show target section
+                const targetId = this.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
         });
     </script>
 </body>
