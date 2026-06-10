@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = ""; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = ""; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +37,7 @@
             <div class="alert-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form action="/final-project/infrastructure/announcements/create" method="POST">
+        <form action="<?= BASE_URL ?>/announcements/create" method="POST">
             <input type="hidden" name="club_ID" value="<?= (int)($clubID ?? 0) ?>">
 
             <div class="form-group">
@@ -53,7 +53,7 @@
             </div>
 
             <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
-                <a href="/final-project/infrastructure/announcements?club_ID=<?= (int)($clubID ?? 0) ?>"
+                <a href="<?= BASE_URL ?>/announcements?club_ID=<?= (int)($clubID ?? 0) ?>"
                    class="btn" style="background:#f1f5f9;color:var(--text-main);width:auto;padding:0.6rem 1.25rem;text-decoration:none;text-align:center;">
                     Cancel
                 </a>

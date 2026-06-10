@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = "events"; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = "events"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +65,7 @@
                 <div>
                     <div class="card-meta">👥 Max Participants: <strong><?= $maxP ?: "Unlimited" ?></strong></div>
                     <?php if (isset($_SESSION["user_ID"]) && $status === "open"): ?>
-                        <form action="/final-project/infrastructure/events/register" method="POST">
+                        <form action="<?= BASE_URL ?>/events/register" method="POST">
                             <input type="hidden" name="event_ID" value="<?= $eventID ?>">
                             <button type="submit" class="btn btn-primary">Register</button>
                         </form>
@@ -74,7 +74,7 @@
                             <?= $status === "closed" ? "Registration Closed" : ucfirst($status) ?>
                         </button>
                     <?php else: ?>
-                        <a href="/final-project/infrastructure/login" class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;">Log in to Register</a>
+                        <a href="<?= BASE_URL ?>/login" class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;">Log in to Register</a>
                     <?php endif; ?>
                 </div>
             </div>

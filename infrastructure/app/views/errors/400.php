@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = ""; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = ""; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +15,7 @@
     <p style="font-size:1rem;max-width:420px;margin:0 auto 2rem;">
         <?= htmlspecialchars($message ?? "The request was invalid or missing required information.") ?>
     </p>
-    <a href="/final-project/infrastructure/clubs" style="text-decoration:none;display:inline-block;" class="btn btn-primary" style="width:auto;padding:0.65rem 1.5rem;">← Go Home</a>
+    <a href="<?= BASE_URL ?>/clubs" style="text-decoration:none;display:inline-block;" class="btn btn-primary" style="width:auto;padding:0.65rem 1.5rem;">← Go Home</a>
 </div>
 </body>
 </html>

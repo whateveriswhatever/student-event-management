@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = ""; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = ""; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +27,7 @@
 <div class="container">
     <div class="header-section">
         <h1 class="page-title">👥 Club Members</h1>
-        <a href="/final-project/infrastructure/clubs" class="btn btn-primary" style="width:auto;padding:0.5rem 1.25rem;text-decoration:none;">← Back to Clubs</a>
+        <a href="<?= BASE_URL ?>/clubs" class="btn btn-primary" style="width:auto;padding:0.5rem 1.25rem;text-decoration:none;">← Back to Clubs</a>
     </div>
 
     <?php $memberships = $memberships ?? []; ?>
@@ -65,12 +65,12 @@
                         <td><?= $m->getJoinedTimeline()->format("M d, Y") ?></td>
                         <td>
                             <?php if ($status === "pending"): ?>
-                            <form action="/final-project/infrastructure/membership/update" method="POST" style="display:inline;">
+                            <form action="<?= BASE_URL ?>/membership/update" method="POST" style="display:inline;">
                                 <input type="hidden" name="membershipID" value="<?= $m->getID() ?>">
                                 <input type="hidden" name="action" value="approve">
                                 <button type="submit" class="btn btn-primary" style="width:auto;padding:0.3rem 0.75rem;font-size:0.8rem;">Approve</button>
                             </form>
-                            <form action="/final-project/infrastructure/membership/update" method="POST" style="display:inline;margin-left:0.4rem;">
+                            <form action="<?= BASE_URL ?>/membership/update" method="POST" style="display:inline;margin-left:0.4rem;">
                                 <input type="hidden" name="membershipID" value="<?= $m->getID() ?>">
                                 <input type="hidden" name="action" value="reject">
                                 <button type="submit" class="btn" style="width:auto;padding:0.3rem 0.75rem;font-size:0.8rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">Reject</button>

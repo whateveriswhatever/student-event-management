@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = ""; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = ""; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +65,7 @@
 
     <div class="add-form">
         <h2 style="font-size:1.15rem;font-weight:600;margin-bottom:1.25rem;">Add New Location</h2>
-        <form action="/final-project/infrastructure/locations/create" method="POST">
+        <form action="<?= BASE_URL ?>/locations/create" method="POST">
             <div class="form-group">
                 <label class="form-label">Building</label>
                 <input type="text" name="building" class="form-input" placeholder="e.g. Block A" required>

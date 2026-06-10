@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = "clubs"; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = "clubs"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +37,7 @@
             <p style="font-size:3rem;">🔍</p>
             <h2>Club Not Found</h2>
             <p>The club you're looking for doesn't exist or has been removed.</p>
-            <a href="/final-project/infrastructure/clubs" class="btn btn-primary" style="width:auto;padding:0.6rem 1.5rem;margin-top:1.5rem;display:inline-block;text-decoration:none;">← Back to Clubs</a>
+            <a href="<?= BASE_URL ?>/clubs" class="btn btn-primary" style="width:auto;padding:0.6rem 1.5rem;margin-top:1.5rem;display:inline-block;text-decoration:none;">← Back to Clubs</a>
         </div>
     <?php else: ?>
         <div class="detail-card">
@@ -68,9 +68,9 @@
             <p class="description-text"><?= nl2br(htmlspecialchars($club->getDescription())) ?></p>
 
             <div class="action-row">
-                <a href="/final-project/infrastructure/clubs" class="btn btn-outline" style="width:auto;padding:0.6rem 1.5rem;text-decoration:none;text-align:center;">← Back</a>
+                <a href="<?= BASE_URL ?>/clubs" class="btn btn-outline" style="width:auto;padding:0.6rem 1.5rem;text-decoration:none;text-align:center;">← Back</a>
                 <?php if (isset($_SESSION["user_ID"])): ?>
-                    <form action="/final-project/infrastructure/membership/join" method="POST" style="flex:1;">
+                    <form action="<?= BASE_URL ?>/membership/join" method="POST" style="flex:1;">
                         <input type="hidden" name="club_ID" value="<?= $club->getID() ?>">
                         <button type="submit" class="btn btn-primary">Request to Join</button>
                     </form>

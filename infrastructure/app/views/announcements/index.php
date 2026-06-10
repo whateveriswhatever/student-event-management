@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = ""; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = ""; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,7 +47,7 @@
     <div id="post-form" style="max-width:720px;margin-top:2rem;">
         <div class="card">
             <h2 style="font-size:1.2rem;font-weight:600;margin-bottom:1.25rem;">Post New Announcement</h2>
-            <form action="/final-project/infrastructure/announcements/create" method="POST">
+            <form action="<?= BASE_URL ?>/announcements/create" method="POST">
                 <input type="hidden" name="club_ID" value="<?= (int)($clubID ?? 0) ?>">
                 <div style="margin-bottom:1rem;">
                     <label style="display:block;font-size:0.875rem;font-weight:600;margin-bottom:0.4rem;">Title</label>

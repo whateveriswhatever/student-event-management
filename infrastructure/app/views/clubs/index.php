@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = "clubs"; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = "clubs"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +38,7 @@
         <div style="text-align:center;padding:5rem 0;color:var(--text-muted);">
             <p style="font-size:3rem;">🏛️</p>
             <h2 style="margin:0.5rem 0;">No Clubs Yet</h2>
-            <p>Be the first to <a href="/final-project/infrastructure/clubs/create" style="color:var(--primary);">create a club</a>!</p>
+            <p>Be the first to <a href="<?= BASE_URL ?>/clubs/create" style="color:var(--primary);">create a club</a>!</p>
         </div>
     <?php else: ?>
         <div class="grid" id="club-list">
@@ -59,12 +59,12 @@
                         📅 <strong>Founded:</strong> <?= $club->getFoundedDate()->format('M d, Y') ?>
                     </div>
                     <?php if (isset($_SESSION["user_ID"])): ?>
-                        <form action="/final-project/infrastructure/membership/join" method="POST">
+                        <form action="<?= BASE_URL ?>/membership/join" method="POST">
                             <input type="hidden" name="club_ID" value="<?= $club->getID() ?>">
                             <button type="submit" class="btn btn-primary">Request to Join</button>
                         </form>
                     <?php else: ?>
-                        <a href="/final-project/infrastructure/login" class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;">Log in to Join</a>
+                        <a href="<?= BASE_URL ?>/login" class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;">Log in to Join</a>
                     <?php endif; ?>
                 </div>
             </div>

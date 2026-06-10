@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +24,7 @@
         </div>
 
         <div class="card" id="login-section">
-            <form action="/final-project/infrastructure/auth/login" method="POST">
+            <form action="<?= BASE_URL ?>/auth/login" method="POST">
                 <div class="form-group">
                     <label class="form-label">Student ID</label>
                     <input type="text" name="studentID" class="form-input" placeholder="e.g. 23031036" required>
@@ -41,7 +41,7 @@
         </div>
 
         <div class="card hidden" id="register-section">
-            <form action="/final-project/infrastructure/auth/signup" method="POST">
+            <form action="<?= BASE_URL ?>/auth/signup" method="POST">
                 <div style="display: flex; gap: 1rem;">
                     <div class="form-group" style="flex: 1;">
                         <label class="form-label">First Name</label>

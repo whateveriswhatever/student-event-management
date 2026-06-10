@@ -1,4 +1,4 @@
-<?php define("ASSET_URL", "/final-project/infrastructure/public"); $activeLink = "clubs"; ?>
+<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = "clubs"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,7 +40,7 @@
             <div class="alert-error"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <form action="/final-project/infrastructure/clubs/create" method="POST" id="create-club-form">
+        <form action="<?= BASE_URL ?>/clubs/create" method="POST" id="create-club-form">
             <div class="form-group">
                 <label class="form-label" for="name">Club Name <span style="color:#dc2626">*</span></label>
                 <input type="text" id="name" name="name" class="form-input"
@@ -76,7 +76,7 @@
             </div>
 
             <div class="form-actions">
-                <a href="/final-project/infrastructure/clubs" class="btn btn-secondary" style="width:auto;padding:0.6rem 1.5rem;text-decoration:none;text-align:center;">Cancel</a>
+                <a href="<?= BASE_URL ?>/clubs" class="btn btn-secondary" style="width:auto;padding:0.6rem 1.5rem;text-decoration:none;text-align:center;">Cancel</a>
                 <button type="submit" class="btn btn-primary" style="flex:1;">Create Club</button>
             </div>
         </form>
