@@ -92,6 +92,11 @@
 
         /** GET /login — Hiển thị trang auth */
         public function showAuthPage(): void {
+            // Ngăn trình duyệt cache trang login
+            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+            header("Cache-Control: post-check=0, pre-check=0", false);
+            header("Pragma: no-cache");
+
             // Nếu đã đăng nhập thì chuyển thẳng về trang chủ
             if ($this->isAuthenticated()) {
                 $this->redirect(BASE_URL . "/");
