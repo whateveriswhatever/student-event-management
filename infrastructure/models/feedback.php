@@ -20,13 +20,6 @@
         }
 
         private function setID(int $id): void {
-            if ($id !== null && $id < 1) {
-
-            throw new InvalidArgumentException(
-                "Invalid feedback ID"
-            );
-        }
-
             $this->ID = $id;
         } 
 
@@ -99,7 +92,7 @@
         }
 
         #[Override]
-        protected function hydrate(array $row): Feedback
+        public function hydrate(array $row): Feedback
         {
             return new Feedback(
                 (int)$row["from_user_ID"],
