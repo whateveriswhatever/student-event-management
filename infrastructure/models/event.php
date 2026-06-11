@@ -325,6 +325,29 @@
                 ["ID" => $eID]
             );
         }
+
+        public function findAll(): array {
+            $rows = $this->all();
+            return array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
+        }
+
+        public function searchByName(string $keyword): array {
+            $stmt = ($this->dbConnection)->prepare(
+                "select
+                    *
+                from event
+                where title like :keyword
+                order by event_date asc"
+            );
+            $stmt->execute(["keyword" => '%' . $keyword . '%']);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
+        }
     }
 
     class EventRegistration {
@@ -447,7 +470,20 @@
                 fn($row) => $this->hydrate($row), $rows
             );
         }
-
+        
+        public function checkRegistration(string $sID, int $eID): bool {
+            $row = $this->findViaCriteria(
+                [
+                    "student_ID"    => $sID,
+                    "event_ID"      => $eID
+                ]
+            );
+            if (!empty($row)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
         
         public function updateRegistrationStatus(int $rID, RegisteredStatus $s): bool {
             return $this->updateViaCriteria([

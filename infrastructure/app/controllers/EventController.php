@@ -2,16 +2,57 @@
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/event.php";
     require_once root_dir . "/models/location.php";
+    require_once root_dir . "/models/membership.php";
 
     class EventController extends BaseController {
         private EventRepository $eventRepo;
         private EventRegistrationRepository $registrationRepo;
         private LocationRepository $locationRepo;
+        private MembershipRepository $membershipRepo;
 
         public function __construct() {
             $this->eventRepo = new EventRepository();
             $this->registrationRepo = new EventRegistrationRepository();
             $this->locationRepo = new LocationRepository();
+            $this->membershipRepo = new MembershipRepository();
+        }
+
+        public function index(): void {
+            $searchQuery = $_GET["search"] ?? '';
+            $studentID = $_SESSION["user_ID"] ?? null;
+
+            if (!empty($searchQuery)) {
+                $events = ($this->eventRepo)->searchByName($searchQuery);
+            } else {
+                $events = ($this->eventRepo)->findAll();
+            }
+
+            // Checking if logged in user has already registered in the event yet
+            for ($i = 0; $i < count($events); $i++) {
+                $curr = $events[$i];
+                $eventID = $curr->getID();
+                $wasRegistered = ($this->registrationRepo)->checkRegistration($studentID, $eventID);
+                $events[$i] = [$curr, $wasRegistered];
+            }
+
+            // Determining user's club memberships for being able to see the private events
+            $userJoinedClubIDs = [];
+            if ($studentID) {
+                $memberships = ($this->membershipRepo)->findViaCriteria([
+                    "student_ID"        => $studentID,
+                    "membership_status" => "active"
+                ]);
+                foreach ($memberships as $m) {
+                    $userJoinedClubIDs[] = (int)$m["club_ID"];
+                }       
+            }
+
+            $this->render("events/index", [
+                "events"            => $events,
+                "userJoinedClubIDs" => $userJoinedClubIDs,
+                "searchQuery"       => $searchQuery,
+                "studentID"         => $studentID
+            ]);
         }
 
         // POST /events/register
@@ -61,9 +102,17 @@
                 $clubID = (int)$_POST["club_ID"];
                 $title = trim($_POST["title"]);
                 $description = trim($_POST["description"]);
-                $eventDate = new DateTime($_POST["event_date"]);
-                $startTime = new DateTime($_POST["start_time"]);
-                $endTime = new DateTime($_POST["end_time"]);
+                $dateInput = $_POST["event_date"];
+                $startTimeInput = $_POST["start_time"];
+                $endTimeInput = $_POST["end_time"];
+                $eventDate = new DateTime($dateInput);
+                $startTime = new DateTime($dateInput . " " . $startTimeInput);
+                $endTime = new DateTime($dateInput . " " . $endTimeInput);
+
+                if ($endTime <= $startTime) {
+                    throw new Exception("The event's ending time must be after its starting time!");
+                }
+
                 $maxParticipants = (int)$_POST["max_participants"];
                 $isPrivate = (bool)$_POST["is_private"];
 

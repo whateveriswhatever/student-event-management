@@ -8,7 +8,7 @@
 
     <div class="nav-middle">
         <a href="<?= base_folder_path ?>/clubs" class="nav-link">Discover</a>
-        <a href="/events" class="nav-link">Events</a>
+        <a href="<?= base_folder_path ?>/events" class="nav-link">Events</a>
         <a href="/student/memberships" class="nav-link">My Clubs</a>
         <a href="<?= base_folder_path ?>/profile" class="nav-link">Profile</a>
     </div>
