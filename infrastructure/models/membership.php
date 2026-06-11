@@ -263,9 +263,15 @@
             );
             return $data;
         }
-
+        
+        /* Only clubs that students were allowed or able to join successully */
         public function getAllJoinedClubIDsViaStudentID(int $sID): array {
-            $rows = $this->findViaCriteria(["student_ID" => $sID]);
+            $rows = $this->findViaCriteria(
+                [
+                    "student_ID"        => $sID,
+                    "membership_status" => "active"
+                ]
+            );
             $clubIDs = array_map(
                 fn ($row) => (int)$row["club_ID"], $rows
             );

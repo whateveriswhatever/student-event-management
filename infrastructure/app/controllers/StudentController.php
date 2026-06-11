@@ -126,6 +126,7 @@
                     echo "<div>Found student with ID: {$studentID}!</div>";
                 }
                 /* Get joined clubs and events */
+                // Only clubs that students were allowed or able to join
                 $joinedClubs = ($this->studentRepo)->getAllJoinedClubs($studentID);
                 $joinedEvents = ($this->studentRepo)->getAllJoinedEvents($studentID);
 
