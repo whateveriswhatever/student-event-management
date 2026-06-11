@@ -2,6 +2,9 @@
     require_once root_dir . "/models/student.php";
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/profile.php";
+    require_once root_dir . "/models/club.php";
+    require_once root_dir . "/models/event.php";
+    require_once root_dir . "/models/announcement.php";
 
     class StudentController extends BaseController {
         private StudentRepository $studentRepo;
@@ -101,7 +104,27 @@
             if ($this->isAuthenticated()) {
                 $this->redirect(BASE_URL . "/");
             }
-            $this->render("auth/login_register");
+
+            // Seeding nếu cơ sở dữ liệu trống
+            $clubRepo = new ClubRepository();
+            if ($clubRepo->count() === 0) {
+                require_once root_dir . "/config/database-seeder.php";
+                DatabaseSeeder::seed();
+            }
+
+            // Lấy dữ liệu động từ database
+            $eventRepo = new EventRepository();
+            $announcementRepo = new AnnouncementRepository();
+
+            $clubs = $clubRepo->all();
+            $events = $eventRepo->all();
+            $announcements = $announcementRepo->all();
+
+            $this->render("auth/login_register", [
+                "clubs" => $clubs,
+                "events" => $events,
+                "announcements" => $announcements
+            ]);
         }
 
         /** GET /signout — Đăng xuất */
