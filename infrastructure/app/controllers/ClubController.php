@@ -195,14 +195,13 @@
             }
             $eventAddressMapper = [];
             $clubID = (int)$_GET["id"];
-            $clubData = ($this->clubRepo)->findByID($clubID);
+            $club = ($this->clubRepo)->findByID($clubID);
             $currentUserRole = null;
-            if (!$clubData) {
+            if (!$club) {
                 $this->render("clubs/index", ["error" => "The requested club doesn't exist!"]);
                 return;
             }
-
-            $club = is_array($clubData) ? ($this->clubRepo)->hydrate($clubData) : $clubData;
+            
             $isMember = false;
             $events = [];
 

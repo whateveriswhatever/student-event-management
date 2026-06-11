@@ -28,6 +28,7 @@
         private int $maxParticipants;
         private int $currParticipants;
         private EventStatus $status;
+        private bool $isPrivate;
 
         private array $timeline = [
             "open"  => null,
@@ -46,8 +47,9 @@
             ?int $cP = 0,
             ?EventStatus $s = null,
             ?int $ID = null,
+            ?bool $iPt = false
         ) {
-            $this->ID = $ID;
+            $this->setID($ID);
             $this->setClubID($cID);
             $this->setTitle($t);
             $this->setDescription($d);
@@ -58,6 +60,11 @@
             $this->setMaxPariticipants($mP);
             $this->setCurrParticipants($cP);
             $this->setStatus($s); 
+            $this->setPrivacy($iPt);
+        }
+
+        private function setID(?int $id): void {
+            $this->ID = $id;
         }
 
         private function isValidTime(string $time): bool {
@@ -114,6 +121,10 @@
 
         private function setCurrParticipants(?int $x = 0): void {
             $this->currParticipants = $x;
+        }
+
+        private function setPrivacy(?bool $x = false): void {
+            $this->isPrivate = $x;
         }
 
         private function closeEvent(): void {
@@ -176,7 +187,9 @@
             return $this->currParticipants;
         }
 
-        
+        public function getPrivacyMode(): bool {
+            return $this->isPrivate;
+        }
     }
 
     class EventRepository extends BaseRepository {
@@ -194,7 +207,8 @@
             int $lID,
             int $mP,
             ?int $cP = 0,
-            EventStatus $s
+            EventStatus $s,
+            ?bool $iPt = false
         ): Event {
             $event = new Event(
                 $cID,
@@ -206,8 +220,10 @@
                 $lID,
                 $mP,
                 $cP,
-                $s
+                $s,
+                $iPt
             );
+
             $isSuccess = $this->add([
                 "club_ID" => $event->getClubID(),
                 "title" => $event->getTitle(),
@@ -218,7 +234,8 @@
                 "location_ID" => $event->getLocationID(),
                 "max_participants" => $event->getMaxParticipants(),
                 "current_participants" => $event->getCurrParticipants(),
-                "status" => ($event->getStatus())->value
+                "status" => ($event->getStatus())->value,
+                "is_private" => ($event->getPrivacyMode())
             ]);
 
             if (!$isSuccess) throw new RuntimeException("Failed to create event");
@@ -235,7 +252,8 @@
                 $mP,
                 $cP,
                 $s,
-                $generatedID
+                $generatedID,
+                $iPt
             );
         }
 
@@ -297,6 +315,13 @@
             $curr++;
             return $this->updateViaCriteria(
                 ["current_participants" => $curr],
+                ["ID" => $eID]
+            );
+        }
+
+        public function updatePrivacyViaID(int $eID, bool $isPrt): bool {
+            return $this->updateViaCriteria(
+                ["is_private" => $isPrt],
                 ["ID" => $eID]
             );
         }

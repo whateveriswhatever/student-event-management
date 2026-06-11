@@ -120,11 +120,12 @@
                 $studentID = $_SESSION["user_ID"];
                 $student = ($this->studentRepo)->findByID($studentID);
                 $profile = ($this->profileRepo)->findByStudentID($studentID);
-                if ($student === null) {
-                    throw new Exception("Student data couldn't be retrieved!");
-                } else {
-                    echo "<div>Found student with ID: {$studentID}!</div>";
-                }
+                // if ($student === null) {
+                //     throw new Exception("Student data couldn't be retrieved!");
+                // } else {
+                //     echo "<div>Found student with ID: {$studentID}!</div>";
+                // }
+                
                 /* Get joined clubs and events */
                 // Only clubs that students were allowed or able to join
                 $joinedClubs = ($this->studentRepo)->getAllJoinedClubs($studentID);

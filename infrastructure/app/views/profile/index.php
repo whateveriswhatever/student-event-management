@@ -36,22 +36,6 @@
     <title>Profile</title>
 </head>
 <body>
-    
-    <!-- <nav class="navbar">
-        <a href="<?= base_folder_path ?>/clubs" class="nav-left" style="text-decoration: none;">
-            <div class="nav-logo">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-            </div>
-            <span class="app-title">C&B Hub</span>
-        </a>
-        <div class="nav-middle">
-            <a href="<?= base_folder_path ?>/clubs" class="nav-link">Discover</a>
-            <a href="#" class="nav-link">Events</a>
-        </div>
-        <div class="nav-right">
-            <a href="<?= base_folder_path ?>/logout" class="btn" style="color: #ef4444;">Logout</a>
-        </div>
-    </nav> -->
     <?php
         $activePage = "profile";
         require root_dir . "/app/views/partials/navbar.php"; 

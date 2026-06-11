@@ -135,6 +135,7 @@
                                 <form action="/final-project/infrastructure/events/register" method="POST">
                                     <input type="hidden" name="event_ID" value="<?= $event->getID() ?>">
                                     <input type="hidden" name="student_ID" value="<?= $_SESSION['user_ID'] ?>">
+                                    <input type="hidden" name="club_ID" value=<?= $club->getID() ?>/>
                                     
                                     <?php if ($isFull): ?>
                                         <button type="button" style="width: 100%; background-color: #ef4444; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed; opacity: 0.7;" disabled>
@@ -258,7 +259,7 @@
             </div>
             
             <div class="modal-body">
-                <form action="/final-project/infrastructure/events/create" method="POST">
+                <form action="<?= base_folder_path ?>/events/create" method="POST">
                     <input type="hidden" name="club_ID" value="<?= $club->getID() ?>">
                     
                     <div style="margin-bottom: 12px;">
@@ -310,7 +311,16 @@
                         <input type="number" name="max_participants" min="1" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
                     </div>
 
-                    <button type="submit" style="width: 100%; background-color: #4f46e5; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Save Event</button>
+                    <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="is_private" name="is_private" value="0" 
+                        style="width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5;"/>
+                        <label for="is_private" 
+                        style="font-size: 0.95rem; font-weight: 500; color: #334155; cursor: pointer; user-select: nonel">
+                            Set private (Only visible to club members)
+                        </label>
+                    </div>
+
+                    <button type="submit" style="width: 100%; background-color: #4f46e5; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Create Event</button>
                 </form>
             </div>
         </div>

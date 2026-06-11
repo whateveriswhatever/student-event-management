@@ -24,6 +24,7 @@
             try {
                 $eventID = (int)($_POST["event_ID"] ?? null);
                 $studentID = (int)($_POST["student_ID"] ?? null);
+                $clubID = (int)($_POST["club_ID"] ?? null);
                 $now = new DateTime();
 
                 $event = ($this->eventRepo)->findByID($eventID);
@@ -37,8 +38,9 @@
                 $registration = ($this->registrationRepo)->register($eventID, $studentID, $now, "success");
 
                 if ($registration) {
-                    $this->json(["message" => "Successfully reigstered for the new event!", "ID" => $registration->getID()]);
+                    // $this->json(["message" => "Successfully reigstered for the new event!", "ID" => $registration->getID()]);
                     // Updating the current participants and displaying it to the UI
+                    $this->redirect(base_folder_path . "/clubs/show?id={$clubID}&status=registered_successfully");
                     
                 } else {
                     $this->json(["error" => "Registration failed!"], 400);
@@ -63,6 +65,7 @@
                 $startTime = new DateTime($_POST["start_time"]);
                 $endTime = new DateTime($_POST["end_time"]);
                 $maxParticipants = (int)$_POST["max_participants"];
+                $isPrivate = (bool)$_POST["is_private"];
 
                 $building = trim($_POST["location_building"]);
                 $room = trim($_POST["location_room"]);
@@ -89,7 +92,8 @@
                     $locationID,
                     $maxParticipants,
                     0,
-                    EventStatus::OPEN
+                    EventStatus::OPEN,
+                    $isPrivate
                 );
 
                 if ($newEvent) {
