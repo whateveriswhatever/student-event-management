@@ -1,5 +1,5 @@
 <?php 
-    define("ASSET_URL", "/final-project/infrastructure/public"); 
+    define("ASSET_URL", base_folder_path . "/public"); 
 
     if (!isset($club)) {
         die('Error: Club data not available.');
