@@ -148,6 +148,7 @@
                     $student = ($this->studentRepo)->findByID($studentID);
                     $role = ($this->roleRepo)->findByID($m->getRoleID());
                     $results[] = [
+                        "studentID" => $studentID,
                         "firstname" => $student->getFirstname(),
                         "lastname"  => $student->getLastname(),
                         "role"      => ($role->getTitle())->value

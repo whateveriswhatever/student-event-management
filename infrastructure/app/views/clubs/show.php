@@ -35,6 +35,10 @@
     }
 
     $executives = accquireExecutives($members);
+
+    // if (isset($isExecutive)) {
+    //     echo "<div>This user is one of the executives</div>";
+    // }
 ?>
 
 <!DOCTYPE html>
@@ -61,11 +65,41 @@
                 <span class="badge member-count-badge"
                         style="align-self: flex-start; cursor: pointer;"
                         data-club-id="<?= $club->getID() ?>"
-                        data-club-name="<?= htmlspecialchars($club->getName()) ?>">
+                        data-club-name="<?= htmlspecialchars($club->getName()) ?>"
+                        data-is-exec="<?= (isset($currentUserRole) && in_array(strtolower($currentUserRole), ["president", "vice president"])) ? 'true' : 'false' ?>">
                     👥 Members: <?= $club->getTotalMembers() ?>
                 </span>
             </div>
         </div>
+
+    <?php if (isset($isExecutive) && $isExecutive): ?>
+        <div style="background-color: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 2rem; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; color: #1e293b; font-size: 1.25rem;">📝 Pending Join Requests</h3>
+        
+            <?php if (empty($pendingRequests)): ?>
+                <p style="color: #64748b; margin: 0;">No pending requests at the moment.</p>
+            <?php else: ?>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <?php foreach ($pendingRequests as $request): ?>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <div>
+                                <strong><?= htmlspecialchars($request['student']->getFirstname() . ' ' . $request['student']->getLastname()) ?></strong>
+                                <div style="font-size: 0.85rem; color: #64748b;">Requested to join</div>
+                            </div>
+                        
+                            <form action="<?= base_folder_path ?>/clubs/process-request" method="POST" style="display: flex; gap: 8px; margin: 0;">
+                                <input type="hidden" name="membership_ID" value="<?= $request['membership_ID'] ?>">
+                                <input type="hidden" name="club_ID" value="<?= $club->getID() ?>">
+                            
+                                <button type="submit" name="action" value="accept" style="background-color: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">Accept</button>
+                                <button type="submit" name="action" value="reject" style="background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">Reject</button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
         <div style="margin-top: 40px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -165,7 +199,7 @@
 
         <div style="margin-top: 50px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
             <h2 style="font-size: 1.4rem; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                👥 Club Members (<?= count($members ?? []) ?>)
+                👥 Club Executives (<?= count($executives ?? []) ?>)
             </h2>
             
             <?php if (empty($executives)): ?>
@@ -242,7 +276,7 @@
     <div id="members-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-club-name">Club Members</h3>
+                <h3 id="modal-club-name">Club Executives</h3>
                 <button id="close-modal-btn" class="close-btn">&times;</button>
             </div>
             <div id="modal-members-list" class="modal-body">

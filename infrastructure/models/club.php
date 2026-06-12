@@ -191,5 +191,27 @@
             }
             return false;
         }
+
+        public function decreaseTotalMembers(int $cID): bool {
+            $club = $this->findByID($cID);
+            if (!$club) {
+                return false;
+            }
+
+            $curr = $club->getTotalMembers();
+            if ($curr > 0) {
+                $curr--;
+                $isSuccess = $this->updateViaCriteria(
+                    [
+                        "total_members" => $curr
+                    ],
+                    [
+                        "ID" => (int)$club->getID()
+                    ]
+                );
+                return $isSuccess;
+            }
+            return false;
+        }
     }
 ?>

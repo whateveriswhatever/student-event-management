@@ -321,7 +321,23 @@
                 }
             }
 
-            
+            /* Incoming join requests in pending status */
+            $isExecutive = in_array($currentUserRole, ["president", "vice president"]);
+            $pendingRequests = [];
+            if ($isExecutive) {
+                $pendingMemberships = ($this->membershipRepo)->findAllMembershipsViaStatus($clubID, MembershipStatus::PENDING);
+                if (!empty($pendingMemberships)) {
+                    $studentRepo = new StudentRepository();
+                    foreach ($pendingMemberships as $pRow) {
+                        $studentData = $studentRepo->findByID($pRow->getStudentID());
+                        $pendingRequests[] = [
+                            "membership_ID" => $pRow->getID(),
+                            "student"       => $studentData,
+                            "requested_at"  => $pRow->getJoinedTimeline() === null ? new DateTime($pRow["joined_at"]) : null
+                        ];
+                    }
+                } 
+            }
 
             $this->render("clubs/show", [
                 "club"                  => $club,
@@ -331,8 +347,163 @@
                 "currentUserRole"       => $currentUserRole,
                 "eventAddressMapper"    => $eventAddressMapper ?? [],
                 "filterStart"           => $filterStartStr ?? "",
-                "filterEnd"             => $filterEndStr ?? ""
+                "filterEnd"             => $filterEndStr ?? "",
+                "isExecutive"           => $isExecutive,
+                "pendingRequests"       => $pendingRequests
             ]);
+        }
+
+        /* GET /my-clubs */
+        public function myClubs(): void {
+            if (!isset($_SESSION["user_ID"])) {
+                $this->redirect(base_folder_path . "/login");
+            }
+
+            $studentID = $_SESSION["user_ID"];
+            $searchQuery = trim($_GET["search"] ?? "");
+
+            // Fetching all approved memberships for this student
+            $memberships = ($this->membershipRepo)->findViaCriteria(
+                [
+                    "student_ID"        => $studentID,
+                    "membership_status" => "active"
+                ]
+            );
+            for ($i = 0; $i < count($memberships); $i++) {
+                $curr = $memberships[$i];
+                $memberships[$i] = ($this->membershipRepo)->hydrate($curr);
+            }
+            $joinedClubs = [];
+            foreach ($memberships as $m) {
+                $clubID = $m->getClubID();
+                $club = ($this->clubRepo)->findByID($clubID);
+                if ($club) {
+                    // If there's a search query, filter by club name (case-insensitive)
+                    if (!empty($searchQuery)) {
+                        if (stripos($club->getName(), $searchQuery) !== false) {
+                            $joinedClubs[] = $club;
+                        }
+                    } else {
+                        $joinedClubs[] = $club;
+                    }
+                }
+            }
+
+            $this->render("clubs/my-clubs", [
+                "joinedClubs"   => $joinedClubs,
+                "searchQuery"   => $searchQuery
+            ]);
+        }
+
+        /* POST /my-clubs/quit */
+        public function quitClub(): void {
+            if ($_SERVER["REQUEST_METHOD"] !== "POST"
+            || !isset($_SESSION["user_ID"])) {
+                $this->redirect(base_folder_path . "/login");
+            }
+            $studentID = (string)$_SESSION["user_ID"];
+            $clubID = (int)$_POST["club_ID"];
+
+            try {
+                $membership = ($this->membershipRepo)->findMembership($studentID, $clubID);
+                $membershipID = $membership->getID();
+                $isSuccess = ($this->membershipRepo)->membershipQuit($membershipID);
+                if ($isSuccess) {
+                    $isDeleted = ($this->membershipRepo)->deleteViaCriteria(
+                        [
+                            "student_ID" => $studentID,
+                            "club_ID"    => $clubID
+                        ]
+                    );
+                    if ($isDeleted) {
+                        // Decreasing the total members in that club
+                        $isDecreased = ($this->clubRepo)->decreaseTotalMembers($clubID);
+                        if ($isDecreased) {
+                            $this->redirect(base_folder_path . "/my-clubs?sucess=quit");
+                        } else {
+                            $this->redirect(base_folder_path . "/my-clubs?error=faild-to-decrease-members");
+                        }
+                    } else {
+                        $this->redirect(base_folder_path . "/my-clubs?error=failed-to-remove-member");
+                    }
+                } else {
+                    $this->redirect(base_folder_path . "/my-clubs?error=failed-to-quit");
+                }
+            } catch (Exception $ex) {
+                error_log("Failed to quit club: {$ex->getMessage()}");
+                $this->redirect(base_folder_path . "/my-clubs?error=failed-to-quit");
+            }
+        }
+
+        /* POST /clubs/process-request */
+        public function processJoiningRequest(): void {
+            if ($_SERVER["REQUEST_METHOD"] !== "POST" || !isset($_SESSION["user_ID"])) {
+                $this->redirect(base_folder_path . "/login");
+            }
+
+            $membershipID = (int)$_POST["membership_ID"];
+            $clubID = (int)$_POST["club_ID"];
+            $action = $_POST["action"]; // "accept" or "reject"
+
+            try {
+                if ($action === "accept") {
+                    $isSuccess = ($this->membershipRepo)->approveMembership($membershipID);
+                    if ($isSuccess) {
+                        $isIncremented = ($this->clubRepo)->increaseTotalMembers($clubID);
+                        if ($isIncremented) {
+                            $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&success=member-accepted");
+                        } else {
+                            $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&error=failed-to-add-member");
+                        }
+                    } else {
+                        $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&error=failed-to-approve-member");
+                    }
+                }
+            } catch (Exception $ex) {
+                error_log("Error processing membership request: " . $ex->getMessage());
+                $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&error=failed-to-process");
+            }
+        }
+
+        /* POST /clubs/member-kick */
+        public function kickMember(): void {
+            if ($_SERVER["REQUEST_METHOD"] !== "POST" ||
+            !isset($_SESSION["user_ID"])) {
+                $this->redirect(base_folder_path . "/login");
+            }
+
+            $clubID = (int)$_POST["club_ID"];
+            $targetStudentID = (string)$_POST["student_ID"];
+            $executiveID = (string)$_SESSION["user_ID"];
+            // echo "<div>{$executiveID}</div>";
+
+            try {
+                // Only executives are allowed to kick other members
+                $membership = ($this->membershipRepo)->findMembership($executiveID, $clubID);
+                $roleID = (int)$membership->getRoleID();
+                $role = ($this->roleRepo)->findByID($roleID);
+                $roleTitle = strtolower($role->getTitle()->value);
+                if ($roleTitle !== "president" && $roleTitle !== "vice president") {
+                    throw new Exception("You don't have permission to modify this club with executive ID: " . $executiveID . " -> " . $roleTitle . "!");
+                }
+                $isDeleted = ($this->membershipRepo)->deleteViaCriteria([
+                    "student_ID"    => $targetStudentID,
+                    "club_ID"       => $clubID
+                ]);
+                if ($isDeleted) {
+                    $isDecreased = ($this->clubRepo)->decreaseTotalMembers($clubID);
+                    if ($isDecreased) {
+                        $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&success=kicked-member-ID-" . $targetStudentID);
+                    } else {
+                        $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&error=failed-to-remove-member-ID-" . $targetStudentID);
+                    }
+                } else {
+                    throw new Exception("Failed to abolish member ID: " . $targetStudentID . "!");
+                }
+            } catch (Exception $ex) {
+                error_log("Failed to kick member: " . $ex->getMessage());
+                $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&error=" . urlencode($ex->getMessage()));
+            }
         }
     }
 ?>

@@ -144,7 +144,7 @@
             
         }
 
-        protected function hydrate(array $row): Membership {
+        public function hydrate(array $row): Membership {
             if (empty($row)) throw new RuntimeException("Empty row!");
 
             try {
@@ -177,7 +177,7 @@
                 "club_ID" => $cID
             ]);
             if (empty($rows)) return null;
-            return $rows[0];
+            return $this->hydrate($rows[0]);
         }
 
         public function getJoinedClubIDOfAStudent(int $sID): array {
@@ -255,9 +255,7 @@
 
         public function findAllMembershipsViaStatus(int $cID, MembershipStatus $s): array {
             $rows = ($this->findViaCriteria(["club_ID" => $cID, "membership_status" => (string)$s->value]));
-            if (empty($rows)) {
-                throw new Exception("Can't find any membership with status {$s->value} in club ID: {$cID}!");
-            }
+
             $data = array_map(
                 fn ($row) => $this->hydrate($row), $rows
             );
@@ -276,6 +274,13 @@
                 fn ($row) => (int)$row["club_ID"], $rows
             );
             return $clubIDs;
+        }
+
+        public function getAll(): array {
+            $rows = $this->all();
+            return array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
         }
     }
 ?>

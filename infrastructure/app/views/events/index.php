@@ -54,8 +54,7 @@
                         <a href="<?= base_folder_path ?>/events" style="align-self: center; color: #ef4444; text-decoration: none; font-weight: 500;">Clear</a>
                     </button>
                 <?php endif; ?>
-            </div>
-            
+            </div> 
         </form>
 
         <div class="events-grid">

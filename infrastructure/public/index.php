@@ -46,6 +46,7 @@
             "/clubs/create"             => ["ClubController", "showCreateForm"],
             "/club/members"             => ["MembershipController", "clubMembers"],
             "/clubs/show"               => ["ClubController", "show"],
+            "/clubs/my-clubs"           => ["ClubController", "myClubs"],
             "/events"                   => ["EventController", "index"],
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
@@ -60,6 +61,8 @@
         "POST" => [
             "/clubs/create"             => ["ClubController", "store"],
             "/clubs/register"           => ["ClubController", "register"],
+            "/clubs/process-request"    => ["ClubController", "processJoiningRequest"],
+            "/clubs/member-kick"        => ["ClubController", "kickMember"],
             "/events/register"          => ["EventController", "registerForEvent"],
             "/events/create"            => ["EventController", "store"],
             "/announcements/create"     => ["AnnouncementController", "store"],
