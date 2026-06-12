@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const commentInput = document.getElementById("comment-input");
   const commentModalTitle = document.getElementById("comments-modal-title");
 
+  // Refreshing time tracker
+  let chatPollTimer = null;
+
   // Helper function to safely render HTML
   const escapeHtml = (text) => {
     return String(text).replace(
@@ -24,10 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  const loadComments = (eventID) => {
-    commentsList.innerHTML = `<div style="text-align: center; padding: 20px; color: #64748b;">
+  const loadComments = (eventID, isBackgroundRefresh = false) => {
+    // Only show the "Loading" text if it's the very first time we open the modal.
+    // We don't want it flashing "Loading..." every 3s
+    if (!isBackgroundRefresh) {
+      commentsList.innerHTML = `<div style="text-align: center; padding: 20px; color: #64748b;">
             Loading comments...
         </div>`;
+    }
 
     const currUserID = document.getElementById("current-user-id")?.value || 0;
     console.log(`Current user ID: ${currUserID}`);
@@ -39,7 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         console.log(`Data: ${JSON.stringify(data)}`);
         if (data.error) {
-          commentsList.innerHTML = `<div 
+          if (!isBackgroundRefresh)
+            commentsList.innerHTML = `<div 
                     style="color: #ef4444; text-align: center;">${escapeHtml(data.error)}</div>`;
           return;
         }
@@ -49,6 +57,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     style="text-align: center; padding: 40px 20px; color: #94a3b8;">No comments yet. Be the first to start the discussion!</div>`;
           return;
         }
+        // Checking if the user is currently scrolled to the bottom
+        // We do this so we don't aggressively yank their screen down if they're scrolling up to read old messages
+        const isScrolledToBottom =
+          commentsList.scrollHeight - commentsList.clientHeight <=
+          commentsList.scrollTop + 50;
+
+        let newHtml = "";
 
         commentsList.innerHTML = "";
 
@@ -93,7 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           commentsList.insertAdjacentHTML("beforeend", commentHtml);
         });
-        commentsList.scrollTop = commentsList.scrollHeight;
+        // Auto-scrolling to bottom if they were already at the bottom, or if it's their first time loading
+        if (isScrolledToBottom || !isBackgroundRefresh) {
+          commentsList.scrollTop = commentsList.scrollHeight;
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -101,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   };
 
-  // Opening modal
+  // Opening modal and starting the timer
   document.querySelectorAll(".open-comments-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const eventID = btn.getAttribute("data-event-id");
@@ -114,13 +132,26 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => (commentsModal.style.opacity = "1"), 10);
 
       loadComments(eventID);
+
+      // Starting the background polling every 3s (3000 miliseconds)
+      // Clearing any existing timer just in case
+      if (chatPollTimer) clearInterval(chatPollTimer);
+      chatPollTimer = setInterval(() => {
+        loadComments(eventID, true);
+      }, 3000);
     });
   });
 
-  // Closing modal
+  // Closing modal and halting the timer
   const hideCommentsModal = () => {
     commentsModal.style.opacity = "0";
     setTimeout(() => (commentsModal.style.display = "none"), 200);
+
+    // Stopping the background polling so we don't hammer the server when the modal is closed
+    if (chatPollTimer) {
+      clearInterval(chatPollTimer);
+      chatPollTimer = null;
+    }
   };
 
   if (closeCommentsBtn)
@@ -163,7 +194,12 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log(`Response data from backend: ${data}`);
           if (data && data.success) {
             commentInput.value = "";
-            loadComments(eventID);
+            loadComments(eventID, false); // Reloading immediately so user sees their message instantly
+
+            // Auto scrolling down immediately after posting
+            setTimeout(() => {
+              commentsList.scrollTop = commentsList.scrollHeight;
+            }, 100);
           } else {
             alert(data.error || "Failed to post comment!");
           }
