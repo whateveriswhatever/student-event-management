@@ -101,177 +101,186 @@
         </div>
     <?php endif; ?>
 
-        <div style="margin-top: 40px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="font-size: 1.5rem; color: #1e293b; margin-bottom: 20px;">📅 Club Events</h2>
+    <div style="margin-top: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.5rem; color: #1e293b; margin-bottom: 20px;">📅 Club Events</h2>
 
-                <?php if (isset($currentUserRole) && in_array($currentUserRole, ["president", "vice president", "vp"])): ?>
-                    <button id="open-create-event-btn" style="background-color: #10b981; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                        + Create Event
-                    </button>
-                <?php endif; ?>
-            </div>
-            
-
-            <?php if (!$isMember): ?>
-                <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; padding: 40px; text-align: center; border-radius: 12px;">
-                    <p style="color: #64748b; font-size: 1.1rem; margin: 0 0 16px 0;">🔒 Events are exclusive to active club members.</p>
-                    <p style="color: #94a3b8; font-size: 0.95rem; margin: 0;">Please request to join this club from the discovery dashboard to view or register into events.</p>
-                </div>
-            <?php else: ?>
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                    <form action="/final-project/infrastructure/clubs/show" method="GET" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-                        <input type="hidden" name="id" value="<?= $club->getID() ?>">
-                
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.85rem; color: #475569; margin-bottom: 4px; font-weight: 600;">From Date</label>
-                            <input type="date" name="start_date" value="<?= htmlspecialchars($filterStart ?? '') ?>" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                        </div>
-                
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.85rem; color: #475569; margin-bottom: 4px; font-weight: 600;">To Date</label>
-                            <input type="date" name="end_date" value="<?= htmlspecialchars($filterEnd ?? '') ?>" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
-                        </div>
-                
-                        <div style="display: flex; gap: 8px;">
-                            <button type="submit" style="background-color: #3b82f6; color: white; padding: 9px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Filter</button>
-                            <a href="/final-project/infrastructure/clubs/show?id=<?= $club->getID() ?>" style="background-color: #e2e8f0; color: #475569; padding: 9px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">Clear</a>
-                        </div>
-                    </form>
-                </div>
-                <?php if (empty($events)): ?>
-                    <div style="color: #64748b; padding: 20px;">No events are currently scheduled for this club.</div>
-                <?php else: ?>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
-                        <?php foreach ($events as $pair): ?>
-                            <?php
-                                $event = $pair[0];
-                                $wasRegistered = $pair[1];
-                                $isFull = $event->getCurrParticipants() >= $event->getMaxParticipants(); 
-                            ?>
-                            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                                <div>
-                                    <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 1.2rem;"><?= htmlspecialchars($event->getTitle()) ?></h3>
-                                    
-                                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; color: #475569; margin-bottom: 16px;">
-                                        <div>📆 <strong>Date:</strong> <?= $event->getEventDate()->format('M d, Y') ?></div>
-                                        <div>⏰ <strong>Time:</strong> <?= $event->getStartTime()->format('H:i') ?> - <?= $event->getEndTime()->format('H:i') ?></div>
-                                        <?php
-                                            $locationID = $event->getLocationID();
-                                            $addressString = $eventAddressMapper[$locationID] ?? "Unknown Location";
-                                        ?>
-                                        <div>📍 <strong>Location:</strong> <?= htmlspecialchars($addressString) ?> </div>
-                                        <div>👥 <strong>Capacity:</strong> <?= $event->getCurrParticipants() ?> / <?= $event->getMaxParticipants() ?> Joined</div>
-                                        <div>Status: <span style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; color: <?= $event->getStatus()->value === 'open' ? '#10b981' : '#ef4444' ?>"><?= htmlspecialchars($event->getStatus()->value) ?></span></div>
-                                    </div>
-                                </div>
-
-                                <form action="/final-project/infrastructure/events/register" method="POST">
-                                    <input type="hidden" name="event_ID" value="<?= $event->getID() ?>">
-                                    <input type="hidden" name="student_ID" value="<?= $_SESSION['user_ID'] ?>">
-                                    <input type="hidden" name="club_ID" value=<?= $club->getID() ?>/>
-                                    
-                                    <?php if ($isFull): ?>
-                                        <button type="button" style="width: 100%; background-color: #ef4444; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed; opacity: 0.7;" disabled>
-                                            🚫 Filled (Max Exceeded)
-                                        </button>
-                                    <?php elseif ($event->getStatus()->value !== 'open'): ?>
-                                        <button type="button" style="width: 100%; background-color: #6b7280; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed;" disabled>
-                                            Registration Closed
-                                        </button>
-                                    <?php elseif ($wasRegistered === true): ?>
-                                        <button type="button" style="width: 100%; background-color: #008000; color: #fff; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed; opacity: 0.7" disabled>
-                                            Registered
-                                        </button>
-                                    <?php else: ?>
-                                        <button type="submit" style="width: 100%; background-color: #4f46e5; color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#4338ca'" onmouseout="this.style.backgroundColor='#4f46e5'">
-                                            Register for Event
-                                        </button>
-                                    <?php endif; ?>
-                                </form>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-
+            <?php if (isset($currentUserRole) && in_array($currentUserRole, ["president", "vice president", "vp"])): ?>
+                <button id="open-create-event-btn" style="background-color: #10b981; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                    + Create Event
+                </button>
             <?php endif; ?>
         </div>
-
-        <div style="margin-top: 50px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <h2 style="font-size: 1.4rem; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                👥 Club Executives (<?= count($executives ?? []) ?>)
-            </h2>
             
-            <?php if (empty($executives)): ?>
-                <p style="color: #64748b; font-style: italic; margin: 0;">No active members found in this club.</p>
+
+        <?php if (!$isMember): ?>
+            <div style="background-color: #f8fafc; border: 2px dashed #cbd5e1; padding: 40px; text-align: center; border-radius: 12px;">
+                <p style="color: #64748b; font-size: 1.1rem; margin: 0 0 16px 0;">🔒 Events are exclusive to active club members.</p>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin: 0;">Please request to join this club from the discovery dashboard to view or register into events.</p>
+            </div>
+        <?php else: ?>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                <form action="/final-project/infrastructure/clubs/show" method="GET" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                    <input type="hidden" name="id" value="<?= $club->getID() ?>">
+                
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; font-size: 0.85rem; color: #475569; margin-bottom: 4px; font-weight: 600;">From Date</label>
+                        <input type="date" name="start_date" value="<?= htmlspecialchars($filterStart ?? '') ?>" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; font-size: 0.85rem; color: #475569; margin-bottom: 4px; font-weight: 600;">To Date</label>
+                        <input type="date" name="end_date" value="<?= htmlspecialchars($filterEnd ?? '') ?>" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    </div>
+                
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" style="background-color: #3b82f6; color: white; padding: 9px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Filter</button>
+                        <a href="/final-project/infrastructure/clubs/show?id=<?= $club->getID() ?>" style="background-color: #e2e8f0; color: #475569; padding: 9px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">Clear</a>
+                    </div>
+                </form>
+            </div>
+            <?php if (empty($events)): ?>
+                <div style="color: #64748b; padding: 20px;">No events are currently scheduled for this club.</div>
             <?php else: ?>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
-                    <?php foreach ($executives as $memberData): ?>
-                        <?php 
-                            $student = $memberData['student'];
-                            $role = $memberData['role'];
-                            
-                            // Safe parsing for Student Details (Handles both Object and Raw Array types gracefully)
-                            $fullName = 'Unknown Student';
-                            $dispID = 'N/A';
-                            
-                            if (is_object($student)) {
-                                $firstName = method_exists($student, 'getFirstname') ? $student->getFirstname() : '';
-                                $lastName = method_exists($student, 'getLastname') ? $student->getLastname() : '';
-                                $fullName = trim($firstName . ' ' . $lastName);
-                                if (empty($fullName) && method_exists($student, 'getName')) {
-                                    $fullName = $student->getName();
-                                }
-                                $dispID = method_exists($student, 'getID') ? $student->getID() : 'N/A';
-                            } elseif (is_array($student)) {
-                                $fullName = trim(($student['firstname'] ?? '') . ' ' . ($student['lastname'] ?? ''));
-                                $dispID = $student['ID'] ?? 'N/A';
-                            }
-                            if (empty($fullName) && $dispID !== 'N/A') $fullName = "Student #" . $dispID;
-                            
-                            // Safe parsing for Role Details
-                            $roleName = 'member';
-                            if ($role && is_object($role) && method_exists($role, 'getTitle')) {
-                                $roleName = $role->getTitle()->value; // Retrieves 'president', 'member', etc.
-                            }
-                            
-                            // Style badges matching distinct club roles
-                            $badgeColor = '#4b5563';
-                            $badgeBg = '#f3f4f6';
-                            if (strtolower($roleName) === 'president') {
-                                $badgeColor = '#7c3aed';
-                                $badgeBg = '#f3e8ff';
-                            } elseif (in_array(strtolower($roleName), ['vice president', 'vp'])) {
-                                $badgeColor = '#2563eb';
-                                $badgeBg = '#dbeafe';
-                            } elseif (strtolower($roleName) === 'secretary') {
-                                $badgeColor = '#059669';
-                                $badgeBg = '#d1fae5';
-                            }
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
+                    <?php foreach ($events as $pair): ?>
+                        <?php
+                            $event = $pair[0];
+                            $eventID = $event->getID();
+                            $wasRegistered = $pair[1];
+                            $isFull = $event->getCurrParticipants() >= $event->getMaxParticipants(); 
                         ?>
-                        
-                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 12px; background: #f8fafc;">
-                            <div style="width: 42px; height: 42px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; color: #475569; flex-shrink: 0;">
-                                <?= htmlspecialchars(mb_substr($fullName, 0, 1)) ?>
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div>
+                                <div id="title-and-discussion" style="display: flex; justify-content: space-between">
+                                    <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 1.2rem;"><?= htmlspecialchars($event->getTitle()) ?></h3>
+                                    <button class="open-comments-btn"
+                                        data-event-id="<?= $eventID ?>"
+                                        data-event-title="<?= htmlspecialchars($event->getTitle()) ?>"
+                                        style="background: transparent; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 6px; ">
+                                        Feedbacks
+                                    </button>
+                                </div>
+                                    
+                                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; color: #475569; margin-bottom: 16px;">
+                                    <div>📆 <strong>Date:</strong> <?= $event->getEventDate()->format('M d, Y') ?></div>
+                                    <div>⏰ <strong>Time:</strong> <?= $event->getStartTime()->format('H:i') ?> - <?= $event->getEndTime()->format('H:i') ?></div>
+                                    <?php
+                                        $locationID = $event->getLocationID();
+                                        $addressString = $eventAddressMapper[$locationID] ?? "Unknown Location";
+                                    ?>
+                                    <div>📍 <strong>Location:</strong> <?= htmlspecialchars($addressString) ?> </div>
+                                    <div>👥 <strong>Capacity:</strong> <?= $event->getCurrParticipants() ?> / <?= $event->getMaxParticipants() ?> Joined</div>
+                                    <div>Status: <span style="font-weight: 600; text-transform: uppercase; font-size: 0.8rem; color: <?= $event->getStatus()->value === 'open' ? '#10b981' : '#ef4444' ?>"><?= htmlspecialchars($event->getStatus()->value) ?></span></div>
+                                </div>
                             </div>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
-                                <span style="font-weight: 600; color: #1e293b; font-size: 0.95rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" title="<?= htmlspecialchars($fullName) ?>">
-                                    <?= htmlspecialchars($fullName) ?>
-                                </span>
-                                <span style="font-size: 0.8rem; color: #64748b;">
-                                    ID: <?= htmlspecialchars($dispID) ?>
-                                </span>
-                                <span style="align-self: flex-start; margin-top: 4px; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px; text-transform: capitalize; color: <?= $badgeColor ?>; background-color: <?= $badgeBg ?>;">
-                                    <?= htmlspecialchars($roleName) ?>
-                                </span>
-                            </div>
+
+                            <form action="/final-project/infrastructure/events/register" method="POST">
+                                <input type="hidden" name="event_ID" value="<?= $event->getID() ?>">
+                                <input type="hidden" name="student_ID" value="<?= $_SESSION['user_ID'] ?>">
+                                <input type="hidden" name="club_ID" value=<?= $club->getID() ?>/>
+                                
+                                <?php if ($isFull): ?>
+                                    <button type="button" style="width: 100%; background-color: #ef4444; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed; opacity: 0.7;" disabled>
+                                        🚫 Filled (Max Exceeded)
+                                    </button>
+                                <?php elseif ($event->getStatus()->value !== 'open'): ?>
+                                    <button type="button" style="width: 100%; background-color: #6b7280; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed;" disabled>
+                                        Registration Closed
+                                    </button>
+                                <?php elseif ($wasRegistered === true): ?>
+                                    <button type="button" style="width: 100%; background-color: #008000; color: #fff; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed; opacity: 0.7" disabled>
+                                        Registered
+                                    </button>
+                                <?php else: ?>
+                                    <button type="submit" style="width: 100%; background-color: #4f46e5; color: white; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.backgroundColor='#4338ca'" onmouseout="this.style.backgroundColor='#4f46e5'">
+                                        Register for Event
+                                    </button>
+                                <?php endif; ?>
+                            </form>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-        </div>
+
+        <?php endif; ?>
     </div>
+
+    <div style="margin-top: 50px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <h2 style="font-size: 1.4rem; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+            👥 Club Executives (<?= count($executives ?? []) ?>)
+        </h2>
+            
+        <?php if (empty($executives)): ?>
+            <p style="color: #64748b; font-style: italic; margin: 0;">No active members found in this club.</p>
+        <?php else: ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;">
+                <?php foreach ($executives as $memberData): ?>
+                    <?php 
+                        $student = $memberData['student'];
+                        $role = $memberData['role'];
+                            
+                        // Safe parsing for Student Details (Handles both Object and Raw Array types gracefully)
+                        $fullName = 'Unknown Student';
+                        $dispID = 'N/A';
+                            
+                        if (is_object($student)) {
+                            $firstName = method_exists($student, 'getFirstname') ? $student->getFirstname() : '';
+                            $lastName = method_exists($student, 'getLastname') ? $student->getLastname() : '';
+                            $fullName = trim($firstName . ' ' . $lastName);
+                            if (empty($fullName) && method_exists($student, 'getName')) {
+                                $fullName = $student->getName();
+                            }
+                            $dispID = method_exists($student, 'getID') ? $student->getID() : 'N/A';
+                        } elseif (is_array($student)) {
+                            $fullName = trim(($student['firstname'] ?? '') . ' ' . ($student['lastname'] ?? ''));
+                            $dispID = $student['ID'] ?? 'N/A';
+                        }
+                        if (empty($fullName) && $dispID !== 'N/A') $fullName = "Student #" . $dispID;
+                            
+                        // Safe parsing for Role Details
+                        $roleName = 'member';
+                        if ($role && is_object($role) && method_exists($role, 'getTitle')) {
+                            $roleName = $role->getTitle()->value; // Retrieves 'president', 'member', etc.
+                        }
+                            
+                        // Style badges matching distinct club roles
+                        $badgeColor = '#4b5563';
+                        $badgeBg = '#f3f4f6';
+                        if (strtolower($roleName) === 'president') {
+                            $badgeColor = '#7c3aed';
+                            $badgeBg = '#f3e8ff';
+                        } elseif (in_array(strtolower($roleName), ['vice president', 'vp'])) {
+                            $badgeColor = '#2563eb';
+                            $badgeBg = '#dbeafe';
+                        } elseif (strtolower($roleName) === 'secretary') {
+                            $badgeColor = '#059669';
+                            $badgeBg = '#d1fae5';
+                        }
+                    ?>
+                        
+                    <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: flex; align-items: center; gap: 12px; background: #f8fafc;">
+                        <div style="width: 42px; height: 42px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; color: #475569; flex-shrink: 0;">
+                            <?= htmlspecialchars(mb_substr($fullName, 0, 1)) ?>
+                        </div>
+                            
+                        <div style="display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
+                            <span style="font-weight: 600; color: #1e293b; font-size: 0.95rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" title="<?= htmlspecialchars($fullName) ?>">
+                                <?= htmlspecialchars($fullName) ?>
+                            </span>
+                            <span style="font-size: 0.8rem; color: #64748b;">
+                                ID: <?= htmlspecialchars($dispID) ?>
+                            </span>
+                            <span style="align-self: flex-start; margin-top: 4px; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px; text-transform: capitalize; color: <?= $badgeColor ?>; background-color: <?= $badgeBg ?>;">
+                                <?= htmlspecialchars($roleName) ?>
+                            </span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 
     <div id="members-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
@@ -360,6 +369,41 @@
         </div>
     </div>
     
+    <!-- UI section for pop-up feedbacks/comments window -->
+    <div id="comments-modal"
+    style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.2s ease;">
+        <div style="background: #fff; width: 500px; max-width: 95%; height: 80vh; max-height: 600px; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1)">
+            
+            <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 id="comments-modal-title"
+                style="margin: 0; color: #1e293b; font-size: 1.1rem;">Comments</h3>
+                <button id="close-comments-btn"
+                style="background: none; border: none; color: #64748b; font-size: 1.5rem; cursor: pointer; padding: 0;">&times;</button>
+            </div>
+
+            <div id="comments-list"
+            style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px;"></div>
+
+            <form id="comment-form"
+            style="padding: 16px 20px; border-top: 1px solid #e2e8f0; background: #fff; display: flex; gap: 12px; align-items: flex-start">
+                <input type="hidden" id="comment-event-id" value="<?= $eventID ?>" />
+                <input type="hidden" id="current-user-id" value="<?= htmlspecialchars($_SESSION["user_ID"] ?? 0) ?>" />
+
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #64748b; flex-shrink: 0;">Me</div>
+
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                    <textarea id="comment-input" placeholder="Write a comment..." required rows="2"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: inherit; resize: none;"></textarea>
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="submit"
+                        style="background: #3b82f6; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">Post</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script src="<?= ASSET_URL ?>/assets/js/ClubDetailPage.js?v=<?= time() ?>"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/EventComments.js?v=<?= time() ?>"></script>
 </body>
 </html>

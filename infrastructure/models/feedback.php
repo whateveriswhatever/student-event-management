@@ -4,13 +4,13 @@
 
     class Feedback {
         private ?int $ID;
-        private int $fromID;
-        private int $toID;
+        private string $fromID;
+        private ?string $toID;
         private int $onEventID;
         private DateTime $timestamp;
         private string $content;
         
-        public function __construct(int $fID, int $tID, string $c, int $onEID, DateTime $t, ?int $id = null) {
+        public function __construct(string $fID, ?string $tID, string $c, int $onEID, DateTime $t, ?int $id = null) {
             $this->setID($id);
             $this->setFromID($fID);
             $this->setToID($tID);
@@ -19,35 +19,20 @@
             $this->setEventDate($t);
         }
 
-        private function setID(int $id): void {
+        private function setID(?int $id): void {
             $this->ID = $id;
         } 
 
-        private function setFromID(int $id): void {
-            if ($id < 1) {
-
-                throw new InvalidArgumentException(
-                    "Invalid sender ID"
-                );
-            }
-
+        private function setFromID(string $id): void {
             $this->fromID = $id;
         }
 
-        private function setToID(int $id): void {
-            if ($id < 1) {
-
-                throw new InvalidArgumentException(
-                    "Invalid receiver ID"
-                );
-            }
-
+        private function setToID(?string $id): void {
             $this->toID = $id;
         }
 
         private function setOnEventID(int $id): void {
             if ($id < 1) {
-
                 throw new InvalidArgumentException(
                     "Invalid event ID"
                 );
@@ -79,8 +64,8 @@
         }
 
         public function getID(): int {return $this->ID;}
-        public function getFromID(): int {return $this->fromID;}
-        public function getToID(): int {return $this->toID;}
+        public function getFromID(): string {return $this->fromID;}
+        public function getToID(): string {return $this->toID;}
         public function getEventID(): int {return $this->onEventID;}
         public function getEventDate(): DateTime {return $this->timestamp;}
         public function getContent(): string {return $this->content;}
@@ -95,20 +80,20 @@
         public function hydrate(array $row): Feedback
         {
             return new Feedback(
-                (int)$row["from_user_ID"],
-                (int)$row["to_user_ID"],
-                (int)$row["on_event_ID"],
+                (string)$row["from_user_ID"],
+                (string)$row["to_user_ID"],
                 (string)$row["content"],
+                (int)$row["on_event_ID"],
                 new DateTime($row["at_timestamp"]),
                 (int)$row["ID"]
             );
         }
 
         public function create(
-            int $fID,
-            int $tID,
+            string $fID,
             int $oED,
-            string $c
+            string $c,
+            ?string $tID = null
         ): Feedback {
             $currTimestamp = new DateTime();
             $feedback = new Feedback(
@@ -116,13 +101,14 @@
                 $tID,
                 $c,
                 $oED,
-                $currTimestamp
+                $currTimestamp,
+                null
             );
             $isSuccess = $this->add(
                 [
                     "from_user_ID" => $feedback->getFromID(),
                     "to_user_ID" => $feedback->getToID(),
-                    "on_event_ID" => $feedback->getEventID(),
+                    "on_event_ID" => (int)$feedback->getEventID(),
                     "at_timestamp" => ($feedback->getEventDate())->format("Y-m-d H:i:s"),
                     "content" => $feedback->getContent()
                 ]
@@ -153,14 +139,14 @@
 
         public function findAllFromEvent(int $eventID): array {
             $rows = $this->findViaCriteria([
-                "to_event_ID" => $eventID
+                "on_event_ID" => $eventID
             ]);
             return array_map(
                 fn ($row) => $this->hydrate($row), $rows
             );
         }
         
-        public function findAllFromUser(int $userID): array {
+        public function findAllFromUser(string $userID): array {
             $rows = $this->findViaCriteria([
                 "from_user_ID" => $userID
             ]);
@@ -169,7 +155,7 @@
             );
         }
 
-        public function findAllToStudent(int $userID): array {
+        public function findAllToStudent(string $userID): array {
             $rows = $this->findViaCriteria([
                 "to_user_ID" => $userID
             ]);
@@ -183,6 +169,28 @@
             return $this->deleteViaCriteria(["ID" => $id]);
         }
 
+        public function timeElapsedString(DateTime $dt): string {
+            $now = new DateTime();
+            $diff = $now->diff($dt);
 
+            if ($diff->y > 0) return $diff->y . "y ago";
+            if ($diff->m > 0) return $diff->m . "mo ago";
+            if ($diff->d > 0) return $diff->d . "d ago";
+            if ($diff->h > 0) return $diff->h . "h ago";
+            if ($diff->i > 0) return $diff->i . "m ago";
+            return "Just now";
+        }
+
+        // This method is used to convert data objects to arrays (useful to send data to the frontend under JSON format)
+        public function toArray(Feedback $obj): array {
+            return [
+                "ID"            => $obj->getID(),
+                "from_user_ID"  => $obj->getFromID(),
+                "to_user_ID"    => $obj->getToID(),
+                "on_event_ID"   => $obj->getEventID(),
+                "at_timestamp"  => $obj->getEventDate()->format("Y-m-d H:i:s"),
+                "content"       => $obj->getContent()
+            ];
+        }
     }
 ?>

@@ -3,18 +3,24 @@
     require_once root_dir . "/models/event.php";
     require_once root_dir . "/models/location.php";
     require_once root_dir . "/models/membership.php";
+    require_once root_dir . "/models/feedback.php";
+    require_once root_dir . "/models/student.php";
 
     class EventController extends BaseController {
         private EventRepository $eventRepo;
         private EventRegistrationRepository $registrationRepo;
         private LocationRepository $locationRepo;
         private MembershipRepository $membershipRepo;
+        private FeedBackRepository $feedbackRepo;
+        private StudentRepository $studentRepo;
 
         public function __construct() {
             $this->eventRepo = new EventRepository();
             $this->registrationRepo = new EventRegistrationRepository();
             $this->locationRepo = new LocationRepository();
             $this->membershipRepo = new MembershipRepository();
+            $this->feedbackRepo = new FeedBackRepository();
+            $this->studentRepo = new StudentRepository();
         }
 
         public function index(): void {
@@ -162,5 +168,80 @@
                 }
             }
         }
+
+        /* GET /events/comments */
+        public function getEventComments(): void {
+            header("Content-type: application/json");
+            $eventID = (int)($_GET["event_ID"] ?? 0);
+
+            if ($eventID < 1) {
+                echo json_encode(["error" => "Invalid event ID"]);
+                return;
+            }
+
+            try {
+                $messages = ($this->feedbackRepo)->findAllFromEvent($eventID);
+                $results = [];
+
+                foreach ($messages as $msg) {
+                    $sender = ($this->studentRepo)->findByID($msg->getFromID());
+                    $results[] = [
+                        "senderID"      => $sender->getID(),
+                        "senderName"    => $sender->getFirstname() . " " . $sender->getLastname(),
+                        "inital"        => mb_substr($sender->getFirstname(), 0, 1),
+                        "content"       => $msg->getContent(),
+                        "timeAgo"       => ($this->feedbackRepo)->timeElapsedString($msg->getEventDate())   // Helper function to show "2 hours ago"
+                    ];
+                }
+                echo json_encode(["comments" => $results]);
+            } catch (Exception $ex) {
+                echo json_encode(["error" => $ex->getMessage()]);
+            }
+            exit;
+        }
+
+        /* POST /events/comments */
+        public function postEventComment(): void {
+            header("Content-type: application/json");
+            $data = json_decode(file_get_contents("php://input"), true);
+
+            $eventID = (int)($data["event_ID"] ?? 0);
+            $content = trim($data["content"] ?? "");
+            $senderID = (string)($_SESSION["user_ID"] ?? 0);
+            $receiverID = (string)($_SESSION["receiver_ID"] ?? null);
+
+            if ($senderID === null) {
+                echo json_encode([
+                    "success"   => false,
+                    "error"     => "You must be logged in to comment."
+                ]);
+                return;
+            }
+
+            if ($eventID < 1 || empty($content)) {
+                echo json_encode([
+                    "success"   => false,
+                    "error"     => "Invalid data"
+                ]);
+                return;
+            }
+
+            try {
+                // null is passed for the receiver ID
+                $feedback = ($this->feedbackRepo)->create($senderID,  $eventID, $content, $receiverID);
+                echo json_encode([
+                    "success"   => true
+                ]);
+
+            } catch (Exception $ex) {
+                echo json_encode(
+                    [
+                        "success"   => false,
+                        "error"     => $ex->getMessage()
+                    ]
+                );
+            }
+        }
+
     }
 ?>

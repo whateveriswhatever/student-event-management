@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ) {
               htmlContent += `
               <form action="${folderPath}/clubs/member-kick" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to kick ${escapeHtml(m.firstname)} ${escapeHtml(m.lastname)}? This action cannot be undone.');">
+                <input type="hidden" />
                 <input type="hidden" name="club_ID" value="${escapeHtml(clubID)}">
                 <input type="hidden" name="student_ID" value="${studentID}">
                 <button type="submit" style="background: #ef4444; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 1.2rem; transition: background 0.2s;" title="Kick Member" onmouseover="this.style.backgroundColor='#dc2626'" onmouseout="this.style.backgroundColor='#ef4444'">&minus;</button>

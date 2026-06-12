@@ -48,6 +48,7 @@
             "/clubs/show"               => ["ClubController", "show"],
             "/clubs/my-clubs"           => ["ClubController", "myClubs"],
             "/events"                   => ["EventController", "index"],
+            "/events/comments"          => ["EventController", "getEventComments"],
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
             "/student/memberships"      => ["MembershipController", "studentMemberships"],
@@ -55,7 +56,8 @@
             "/signout"                  => ["StudentController", "signout"],
             "/profile"                  => ["StudentController", "showProfile"],
             "/admin/create/club"        => ["ClubController", "showCreateForm"],
-            "/memberships/all-members"  => ["MembershipController", "getMembersJson"]
+            "/memberships/all-members"  => ["MembershipController", "getMembersJson"],
+            "/feedbacks/chat-history"   => ["FeedbackController", "chatHistory"]
         ],
 
         "POST" => [
@@ -65,16 +67,17 @@
             "/clubs/member-kick"        => ["ClubController", "kickMember"],
             "/events/register"          => ["EventController", "registerForEvent"],
             "/events/create"            => ["EventController", "store"],
+            "/events/comments"          => ["EventController", "postEventComment"],
             "/announcements/create"     => ["AnnouncementController", "store"],
             "/membership/apply"         => ["MembershipController", "apply"],
             "/membership/update"        => ["MembershipController", "updateStatus"],
             "/membership/join"          => ["MembershipController", "join"],
             "/attendance/checkin"       => ["AttendanceController", "checkIn"],
-            "/feedback/submit"          => ["FeedbackController", "store"],
             "/locations/create"         => ["LocationController", "store"],
             "/auth/login"               => ["StudentController", "login"],
             "/auth/signup"              => ["StudentController", "register"],
-            "/admin/create/club"        => ["ClubController", "store"]
+            "/admin/create/club"        => ["ClubController", "store"],
+            "/feedbacks/submit"          => ["FeedbackController", "store"]
         ]
     ];
 
