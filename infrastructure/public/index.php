@@ -25,7 +25,6 @@ function statusLabel(string $status): string
 function initials(string $name): string
 {
     $words = preg_split("/\s+/", trim($name)) ?: [];
-    $letters = [];
 
     foreach ($words as $word) {
         if (!preg_match("/^\p{L}/u", $word, $match)) {
