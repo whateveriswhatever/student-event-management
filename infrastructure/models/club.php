@@ -1,5 +1,6 @@
 <?php
     require_once root_dir . "/config/database-config.php";
+    require_once root_dir . "/models/base.php";
     
     enum Status: string {
         case ACTIVE = "active";
@@ -24,8 +25,8 @@
             $this->setID($id);
         }
 
-        private function setID(int $id): void {
-            if ($id < 1 && $id === null) throw new InvalidArgumentException("Invalid ID");
+        private function setID(?int $id): void {
+            if ($id !== null && $id < 1) throw new InvalidArgumentException("Invalid ID");
             $this->ID = $id;
         }
 
@@ -94,6 +95,7 @@
                 "name" => $x->getName(),
                 "description" => $x->getDescription(),
                 "founded_date" => ($x->getFoundedDate())->format("Y-m-d H:i:s"),
+                "logo_url" => $x->getLogoURL(),
                 "status" => ($x->getStatus())->value
                 ]);
             if ($isSuccess) {
@@ -102,6 +104,13 @@
             } else {
                 return null;
             }
+        }
+
+        public function findByID(int $id): ?Club {
+            $data = $this->findViaCriteria(["ID" => $id]);
+            if (empty($data)) throw new InvalidArgumentException("Club with ID {$id} doesn't exist!");
+            $row = $data[0];
+            return $this->hydrate($row);
         }
 
         public function findByName(string $n): ?Club {
@@ -133,14 +142,14 @@
         protected function hydrate(array $row): Club {
             if (empty($row)) throw new RuntimeException("Empty row!");
             try {
-                $fD = new DateTime($row["founded_at"]);
-            } catch (PDOException $ex) {
+                $fD = new DateTime($row["founded_date"]);
+            } catch (Exception $ex) {
                 throw new RuntimeException("Invalid founded date!");
             }
             $club = new Club(
                 (string)$row["name"],
                 (string)$row["description"],
-                new DateTime($row["founded_date"]),
+                $fD,
                 (string)$row["logo_url"],
                 Status::from($row["status"])
             );

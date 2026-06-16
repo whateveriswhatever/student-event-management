@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the browser is requesting the root folder directly (empty string ^$), bypassinng directory checking and send it straight to the front router
+    RewriteRule ^$ public/index.php [QSA,L]
+
+    # For all other URLs, if it's an actual file or folder, serve it directly
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Otherwise, passing the clean virtual path into our front router script
+    RewriteRule ^(.*)$ public/index.php [QSA,L]
+
+</IfModule>
+
+# Chặn truy cập trực tiếp vào file .env qua HTTP
+# Tránh lộ DB credentials khi deploy lên server
+<Files ".env">
+    Require all denied
+</Files>
+
+# NOTE (production): Đổi Access-Control-Allow-Origin trong index.php
+# từ "*" sang domain cụ thể trước khi deploy lên môi trường thật

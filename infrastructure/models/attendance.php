@@ -21,7 +21,7 @@
             $this->setAttendanceStatus($s);
         }
 
-        private function setID(int $id): void {
+        private function setID(?int $id): void {
             if ($id !== null && $id > 0) $this->ID = $id; 
         }
 
@@ -56,7 +56,7 @@
             );
             $isSuccess = $this->add([
                 "registration_ID" => (int)$attendance->getRegisteredID(),
-                "check_in_time" => $attendance->getCheckinTime()->format("Y-m-d H:i:s"),
+                "checkin_time" => $attendance->getCheckinTime()->format("Y-m-d H:i:s"),
                 "attendance_status" => ($attendance->getStatus())->value
             ]);
 
@@ -73,7 +73,7 @@
         public function hydrate(array $row): Attendance {
             if (empty($row)) throw new RuntimeException("Empty rows!");
             try {
-                $checkinTime = new DateTime($row["check_in_time"]);
+                $checkinTime = new DateTime($row["checkin_time"]);
             } catch (Exception $ex) {
                 throw new RuntimeException("Invalid check_in_time");
             } 
@@ -123,7 +123,7 @@
         public function findByTimestamp(AttendanceStatus $s, DateTime $tl): array {
             $all = $this->findViaCriteria([
                 "attendance_status" => $s->value,
-                "check_in_time" => $tl->format("Y-m-d H:i:s")
+                "checkin_time" => $tl->format("Y-m-d H:i:s")
             ]);
 
             $instances = array_map(

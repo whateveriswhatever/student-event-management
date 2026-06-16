@@ -1,5 +1,9 @@
 <?php
-define("root_dir", dirname(__DIR__));
+    // Starting the session to track logged-in users globally
+    session_start();
+
+    // Front router
+    define("root_dir", dirname(__DIR__));
 
 function e(string $value): string
 {

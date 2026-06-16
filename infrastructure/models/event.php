@@ -76,18 +76,15 @@
         }
 
         private function setStartTime(DateTime $sT): void {
-            if ($this->getEndTime() !== null) {
-                if ($sT > $this->getEndTime()) throw new RuntimeException("Invalid time!");
-                $this->startTime = $sT;
-            } else {
-                $this->startTime = $sT;
+            if (isset($this->endTime)) {
+                if ($sT > $this->endTime) throw new RuntimeException("Invalid time!");
             }
+            $this->startTime = $sT;
         }
 
         private function setEndTime(DateTime $eT): void {
-            if ($this->getStartTime() !== null) {
-                if ($eT < $this->getEndTime()) throw new RuntimeException("Invalid time!");
-                $this->endTime = $eT;
+            if (isset($this->startTime)) {
+                if ($eT < $this->startTime) throw new RuntimeException("Invalid time!");
             }
             $this->endTime = $eT;
         }
@@ -195,8 +192,8 @@
                 "title" => $event->getTitle(),
                 "description" => $event->getDescription(),
                 "event_date" => $event->getEventDate()->format("Y-m-d"),
-                "start_time" => $event->getStartTime(),
-                "end_time" => $event->getEndTime(),
+                "start_time" => $event->getStartTime()->format("Y-m-d H:i:s"),
+                "end_time" => $event->getEndTime()->format("Y-m-d H:i:s"),
                 "location_ID" => $event->getLocationID(),
                 "max_participants" => $event->getMaxParticipants(),
                 "status" => ($event->getStatus())->value
@@ -222,13 +219,13 @@
         public function findByID(int $id): ?Event {
             $data = $this->findViaCriteria(["ID" => $id]);
             if (empty($data)) return null;
-            return $data[0];
+            return $this->hydrate($data[0]);
         }
 
         public function findAllFromClub(int $cID): array {
             $rows = $this->findViaCriteria(["club_ID" => $cID]);
             return array_map(
-                fn($row) => $this->$row, $rows
+                fn($row) => $this->hydrate($row), $rows
             );
         }
 
@@ -246,7 +243,7 @@
                 $eT = new DateTime($row["end_time"]);
 
                 $event = new Event(
-                    (int)$row["club_id"],
+                    (int)$row["club_ID"],
                     (string)$row["title"],
                     (string)$row["description"],
                     $eD,
@@ -272,12 +269,16 @@
         private DateTime $registeredAt;
         private RegisteredStatus $status;
 
-        public function __construct(int $eID, int $sID, DateTime $rdAt, ?RegisteredStatus $s = null, ?int $id = null) {
+        public function __construct(int $eID, int $sID, DateTime $rdAt, $s = null, ?int $id = null) {
             $this->ID = $id;
             $this->setEventID($eID);
             $this->setStudentID($sID);
             $this->setRegisteredTime($rdAt);
-            $this->setStatus($s);
+            if ($s instanceof RegisteredStatus) {
+                $this->setStatus($s);
+            } else {
+                $this->setStatus(null, $s);
+            }
         }
 
         private function setEventID(int $eID): void {
@@ -286,7 +287,7 @@
         }
 
         private function setStudentID(int $sID): void {
-            if ($sID < 1) throw new InvalidArgumentException("Invalid event ID");
+            if ($sID < 1) throw new InvalidArgumentException("Invalid student ID");
             $this->studentID = $sID;
         }
 
@@ -307,8 +308,9 @@
         }
 
         public function setStatus(?RegisteredStatus $s, ?string $typeMarking = null): void {
-            if (($typeMarking || $typeMarking !== null) && ($s === null || !$s)) {
-                switch ($s) {
+            // Nếu truyền typeMarking (string) và không có enum $s → dùng typeMarking
+            if ($typeMarking !== null && $s === null) {
+                switch ($typeMarking) {
                     case "success":
                         $this->markSuccess();
                         break;
@@ -316,17 +318,24 @@
                         $this->markPending();
                         break;
                     case "reject":
+                    case "rejected":
                         $this->markReject();
                         break;
                     default:
                         $this->markPending();
                         break;
                 }
+                return;
             }
 
-            if ((!$typeMarking || $typeMarking === null) && ($s || $s !== null)) {
+            // Nếu truyền enum $s trực tiếp → gán thẳng
+            if ($s !== null) {
                 $this->status = $s;
+                return;
             }
+
+            // Mặc định: pending
+            $this->markPending();
         }
 
         public function getID(): ?int {return $this->ID;}
@@ -354,7 +363,7 @@
                 "event_ID" => $registration->getEventID(),
                 "student_ID" => $registration->getStudentID(),
                 "registered_at" => $registration->getRegisteredAt()->format("Y-m-d H:i:s"),
-                "registration_status" => $registration->getStatus()
+                "registration_status" => $registration->getStatus()->value
             ]);
             
             if (!$isSuccess) {
@@ -371,10 +380,10 @@
             );
         }
 
-        public function findAllRegistrationsFromEvent(int $eID): array {
-            $rows = $this->findViaCriteria(["ID" => $eID]);
+        public function findAllRegistrationsFromStudent(int $sID): array {
+            $rows = $this->findViaCriteria(["student_ID" => $sID]);
             return array_map(
-                fn($row) => $row, $rows
+                fn($row) => $this->hydrate($row), $rows
             );
         }
 

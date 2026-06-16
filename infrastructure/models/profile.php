@@ -1,6 +1,7 @@
 <?php
     require_once root_dir . "/config/database-config.php";
     require_once root_dir . "/models/student.php";
+    require_once root_dir . "/models/base.php";
 
     enum DegreeType: string {
         case UNDER = "undergraduate";
@@ -13,30 +14,34 @@
         private string $studentID;
         private string $major;
         private string $class;
-        private string $degree;
+        private DegreeType $degree;
         private int $enrolledYear;
 
         private array $availableMajors = [
         // Major -> Class code
-        "mathematics" => "MAT",
-        "physics" => "PHY",
-        "electrical engineering" => "EEG",
-        "economics" => "ECO",
-        "audit & accountance" => "AAE",
-        "computer science" => "CSE",
-        "computer engineering" => "CEG",
-        "marketing" => "MAR",
-        "mechanical engineering" => "MEG",
-        "civial engineering" => "CEG",
-        "finance" => "FIN",
-        "business ananysis" => "BAS"
+        "informatics and computer engineering" => "ICE",
+        "business and data analysis" => "BDA",
+        "management information system" => "MIS",
+        "accounting, analyzing and auditing" => "AC",
+        "automation and informatics" => "AAI",
+        "english language" => "EL",
+        "digital business" => "DB",
+        "digital communication" => "DC"
         ];
 
-        public function __construct(string $sID, string $m, DegreeType $dtype) {
+        public function __construct(string $sID, string $m, DegreeType $dtype, ?int $ID = null) {
             $this->setStudentID($sID);
             $this->setMajor($m);
             $this->setClass($this->getMajor());
             $this->setDegree($dtype);
+            $this->setProfileID($ID);
+        }
+
+        private function setProfileID(?int $pID = null): void {
+            // if ($pID < 1) throw new InvalidArgumentException("ID can not be lower than 1!");
+            if ($pID !== null) {
+                $this->ID = $pID;
+            }
         }
 
         private function setStudentID(string $sID): void {
@@ -53,21 +58,25 @@
         private function setMajor(string $m): void {
             if ($this->doesContainSpecialChars($m)) throw new InvalidArgumentException("Major title contains special characters!");
             $m = strtolower($m);
-            if (!isset($availableMajors[$m])) throw new InvalidArgumentException("Major doesn't exist!");
-            $this->major = $m;
+            $isExisted = array_key_exists($m, $this->availableMajors);
+            if ($isExisted) {
+                $this->major = $m;
+            } else {
+                throw new InvalidArgumentException("Major {$m} doesn't exist!");
+            }
         }
 
         private function setClass(string $m): void {
-            $enrolledYear = $this->getEnrolledYear();
+            // $enrolledYear = $this->getEnrolledYear();
             $major = $this->getMajor();
             $classCode = $this->availableMajors[$major];
             // ICE2022A
-            $c = $classCode + (string)$enrolledYear;
+            $c = $classCode . "";
             $this->class = $c;
         }
 
         private function setDegree(DegreeType $d): void {
-            $this->degree = $d->value;
+            $this->degree = $d;
         }
 
         private function setEnrolledYear(int $y): void {
@@ -78,8 +87,9 @@
         public function getMajor(): string {return $this->major;}
         public function getProfileID(): int {return $this->ID;}
         public function getStudentID(): string {return $this->studentID;}
-        public function getDegree(): string {return $this->degree;}
-        public function getEnrolledYear(): int {return $this->enrolledYear;}
+        public function getDegree(): DegreeType {return $this->degree;}
+        public function getClass(): string {return $this->class;}
+        // public function getEnrolledYear(): int {return $this->enrolledYear;}
     }
 
 
@@ -96,7 +106,9 @@
             return new Profile(
                     $row["student_ID"],
                     $row["major"],
-                    $row["degree"]);
+                    DegreeType::from($row["degree"]) ?? DegreeType::UNDER,
+                    $row["ID"]
+            );
         }
 
         private function isIDExist(int $id): bool {
@@ -118,6 +130,33 @@
             $isSuccess = $studentRepo->updateViaCriteria(["profile_ID" => $pID], ["ID" => $sID]);
             return $isSuccess;
             
+        }
+
+        public function create(string $sID, string $m, ?DegreeType $d = null): ?Profile {
+            if ($d === null) {
+                $d = DegreeType::UNDER;
+            }
+            $newProfile = new Profile($sID, $m, $d);
+            $isSuccess = $this->add(
+                [
+                    "student_ID" => $sID,
+                    "major" => $m, 
+                    "degree" => $d->value,
+                    "class" => $newProfile->getClass()
+                ]
+            );
+            if ($isSuccess) {
+                $generatedID = $this->getLatestID();
+                return new Profile(
+                    $newProfile->getStudentID(), 
+                    $newProfile->getMajor(), 
+                    $newProfile->getDegree(),
+                    $generatedID
+                );
+            } else {
+                throw new RuntimeException("Failed to create new student profile!");
+                
+            }
         }
 
         #[Override]

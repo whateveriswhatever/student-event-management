@@ -15,7 +15,7 @@
             $this->setCapacity($a);
         }
 
-        private function setID(int $id): void {
+        private function setID(?int $id): void {
             if ($id !== null) {
                 $this->ID = $id;
             }
@@ -64,9 +64,9 @@
             $location = new Location($b, $r, $a);
             $isSuccess = $this->add(
                 [
-                    "building" => $b,
-                    "room" => $r, 
-                    "attendance_capacity" => $a
+                    "building" => $location->getBuilding(),
+                    "room" => $location->getRoom(), 
+                    "attendance_capacity" => $location->getMaximumCapacity()
                 ]
             );
             if (!$isSuccess) throw new RuntimeException("Failed to create new location!");
@@ -100,7 +100,7 @@
             $isExisted = $this->isExist($id);
             if (!$isExisted) throw new InvalidArgumentException("ID is never existed!");
             if ($x < 10) throw new InvalidArgumentException("Minimum capacity for an event is 10!"); 
-            return $this->updateViaCriteria(["attendance_capcity" => $x], ["ID" => $id]);
+            return $this->updateViaCriteria(["attendance_capacity" => $x], ["ID" => $id]);
         }
 
         public function deleteLocation(int $id): bool {

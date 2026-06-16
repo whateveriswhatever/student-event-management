@@ -19,15 +19,13 @@
             $this->setEventDate($t);
         }
 
-        private function setID(int $id): void {
-            if ($id !== null && $id < 1) {
-
-            throw new InvalidArgumentException(
-                "Invalid feedback ID"
-            );
-        }
-
-            $this->ID = $id;
+        private function setID(?int $id): void {
+            if ($id !== null) {
+                if ($id < 1) {
+                    throw new InvalidArgumentException("Invalid feedback ID");
+                }
+                $this->ID = $id;
+            }
         } 
 
         private function setFromID(int $id): void {
@@ -85,7 +83,7 @@
             $this->timestamp = $t;
         }
 
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {return $this->ID;}
         public function getFromID(): int {return $this->fromID;}
         public function getToID(): int {return $this->toID;}
         public function getEventID(): int {return $this->onEventID;}
@@ -104,8 +102,8 @@
             return new Feedback(
                 (int)$row["from_user_ID"],
                 (int)$row["to_user_ID"],
-                (int)$row["on_event_ID"],
                 (string)$row["content"],
+                (int)$row["on_event_ID"],
                 new DateTime($row["at_timestamp"]),
                 (int)$row["ID"]
             );
@@ -160,7 +158,7 @@
 
         public function findAllFromEvent(int $eventID): array {
             $rows = $this->findViaCriteria([
-                "to_event_ID" => $eventID
+                "on_event_ID" => $eventID
             ]);
             return array_map(
                 fn ($row) => $this->hydrate($row), $rows
