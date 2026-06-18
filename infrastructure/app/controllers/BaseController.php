@@ -15,6 +15,18 @@
             }
         }
 
+        /**
+         * Bắt buộc người dùng phải có quyền Admin.
+         */
+        protected function requireAdmin(): void {
+            $this->requireAuth();
+            // TODO: Replace with real role-based check. For now, block to prevent unauth access.
+            if (!isset($_SESSION["is_admin"]) || $_SESSION["is_admin"] !== true) {
+                $this->render("errors/400", ["message" => "Truy cập bị từ chối: Yêu cầu quyền Quản trị viên."]);
+                exit;
+            }
+        }
+
         /** Lấy ID của người dùng đang đăng nhập từ session */
         protected function getCurrentUserID(): ?string {
             return $_SESSION["user_ID"] ?? null;

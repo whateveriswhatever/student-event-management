@@ -11,14 +11,14 @@
 
         /** GET /locations — Danh sách tất cả địa điểm */
         public function index(): void {
-            $this->requireAuth();
+            $this->requireAdmin();
             $locations = $this->locationRepository->all();
             $this->render("admin/locations", ["locations" => $locations]);
         }
 
         /** POST /locations/create — Tạo địa điểm mới */
         public function store(): void {
-            $this->requireAuth();
+            $this->requireAdmin();
             $building = $this->post("building");
             $room     = $this->post("room");
             $capacity = $this->postInt("capacity");

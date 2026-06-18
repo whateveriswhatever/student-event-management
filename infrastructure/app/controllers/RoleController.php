@@ -12,6 +12,11 @@
 
         // POST /admin/roles/create
         public function store(): void {
+            $this->requireAdmin();
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header("Location: /admin/roles");
+                exit;
+            }
             try {
                 $title = RoleTitle::from($_POST['title'] ?? 'member');
                 $permission = RolePermission::from($_POST['permission'] ?? 'regular');
