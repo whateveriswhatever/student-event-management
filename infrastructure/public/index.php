@@ -46,8 +46,7 @@
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
             "/student/memberships"      => ["MembershipController", "studentMemberships"],
-            "/login"                    => ["StudentController", "showAuthPage"],
-            "/signout"                  => ["StudentController", "signout"]
+            "/login"                    => ["StudentController", "showAuthPage"]
         ],
 
         "POST" => [
@@ -60,6 +59,7 @@
             "/attendance/checkin"       => ["AttendanceController", "checkIn"],
             "/feedback/submit"          => ["FeedbackController", "store"],
             "/locations/create"         => ["LocationController", "store"],
+            "/signout"                  => ["StudentController", "signout"],
             "/auth/login"               => ["StudentController", "login"],
             "/auth/signup"              => ["StudentController", "register"]
         ]

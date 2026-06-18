@@ -127,8 +127,12 @@
             ]);
         }
 
-        /** GET /signout — Đăng xuất */
+        /** POST /signout — Đăng xuất */
         public function signout(): void {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->redirect(BASE_URL . "/");
+                return;
+            }
             // Xóa toàn bộ session data
             $_SESSION = [];
             // Xóa session cookie nếu có

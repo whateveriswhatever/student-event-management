@@ -27,13 +27,15 @@ $activeLink = $activeLink ?? "";
                      alt="Avatar" class="avatar">
                 <span class="student-name"><?= htmlspecialchars($_SESSION['userLastname'] ?? 'Student') ?></span>
             </div>
-            <a href="<?= BASE_URL ?>/signout" class="logout-btn" title="Sign Out">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-            </a>
+            <form action="<?= BASE_URL ?>/signout" method="POST" style="display:inline;">
+                <button type="submit" class="logout-btn" title="Sign Out" aria-label="Sign Out" style="background:none;border:none;cursor:pointer;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </form>
         <?php else: ?>
             <a href="<?= BASE_URL ?>/login" class="nav-link" style="font-weight:600;color:var(--text-main);">Log in</a>
             <a href="<?= BASE_URL ?>/login#register" class="btn btn-primary" style="padding:0.5rem 1.25rem;width:auto;">Register</a>

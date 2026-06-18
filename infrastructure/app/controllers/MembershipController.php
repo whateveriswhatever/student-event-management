@@ -128,6 +128,9 @@
 
             if ($isSuccess) {
                 $fallbackURL = $_SERVER["HTTP_REFERER"] ?? BASE_URL . "/clubs";
+                if (!str_starts_with($fallbackURL, BASE_URL)) {
+                    $fallbackURL = BASE_URL . "/clubs";
+                }
                 $this->redirect($fallbackURL);
             } else {
                 $this->render("errors/500", [

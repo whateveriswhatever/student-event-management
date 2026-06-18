@@ -37,7 +37,11 @@
                 ];
                 if ($this->attendanceRepository->add($payload)) {
                     $referer = $_SERVER["HTTP_REFERER"] ?? BASE_URL . "/";
-                    $this->redirect($referer . "&checkin=success");
+                    if (!str_starts_with($referer, BASE_URL)) {
+                        $referer = BASE_URL . "/";
+                    }
+                    $separator = parse_url($referer, PHP_URL_QUERY) ? '&' : '?';
+                    $this->redirect($referer . $separator . "checkin=success");
                 }
             } catch (Exception $e) {
                 $this->jsonError($e->getMessage(), 500);
