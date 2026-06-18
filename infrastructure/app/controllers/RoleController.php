@@ -18,8 +18,12 @@
                 exit;
             }
             try {
-                $title = RoleTitle::from($_POST['title'] ?? 'member');
-                $permission = RolePermission::from($_POST['permission'] ?? 'regular');
+                $title = RoleTitle::tryFrom($_POST['title'] ?? 'member');
+                $permission = RolePermission::tryFrom($_POST['permission'] ?? 'regular');
+
+                if (!$title || !$permission) {
+                    throw new Exception("Thông tin phân quyền không hợp lệ");
+                }
 
                 $this->roleRepository->create($title, $permission);
                 header("Location: /admin/roles?success=1");

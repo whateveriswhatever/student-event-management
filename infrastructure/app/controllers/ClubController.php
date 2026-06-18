@@ -32,7 +32,8 @@
                 $name        = $this->post("name");
                 $description = $this->post("description");
                 $logoURL     = $this->post("logo_url");
-                $status      = Status::from($this->post("status", "active"));
+                $status      = Status::tryFrom($this->post("status", "active"));
+                if (!$status) throw new Exception("Trạng thái câu lạc bộ không hợp lệ");
                 $foundedDate = new DateTime($this->post("founded_date", "now"));
 
                 $newClub = $this->clubRepo->create($name, $description, $foundedDate, $logoURL, $status);
