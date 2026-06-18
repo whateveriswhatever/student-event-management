@@ -4,11 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleToRegister = document.getElementById("toggle-to-register");
   const toggleToLogin = document.getElementById("toggle-to-login");
 
-  console.log("dcmm!");
-
   // Switching to register form
   toggleToRegister.addEventListener("click", () => {
-    console.log("Clicked to display the login section!");
+    console.log("Clicked to display the register section!");
     loginSection.classList.add("hidden");
     registerSection.classList.remove("hidden");
     document.title = "Register - Club&Event Seeker";
@@ -19,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     registerSection.classList.add("hidden");
     loginSection.classList.remove("hidden");
     document.title = "Sign In - Club&Event Seeker";
-    console.log("Clicked to display the signup section!");
+    console.log("Clicked to display the login section!");
   });
 
   // Auto-opening register tab if URL contains #register (e.g: from the nav-bar button)
