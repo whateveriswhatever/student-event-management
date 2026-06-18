@@ -4,13 +4,13 @@
 
     class Feedback {
         private ?int $ID;
-        private int $fromID;
-        private int $toID;
+        private string $fromID;
+        private string $toID;
         private int $onEventID;
         private DateTime $timestamp;
         private string $content;
         
-        public function __construct(int $fID, int $tID, string $c, int $onEID, DateTime $t, ?int $id = null) {
+        public function __construct(string $fID, string $tID, string $c, int $onEID, DateTime $t, ?int $id = null) {
             $this->setID($id);
             $this->setFromID($fID);
             $this->setToID($tID);
@@ -28,8 +28,8 @@
             }
         } 
 
-        private function setFromID(int $id): void {
-            if ($id < 1) {
+        private function setFromID(string $id): void {
+            if (empty($id)) {
 
                 throw new InvalidArgumentException(
                     "Invalid sender ID"
@@ -39,8 +39,8 @@
             $this->fromID = $id;
         }
 
-        private function setToID(int $id): void {
-            if ($id < 1) {
+        private function setToID(string $id): void {
+            if (empty($id)) {
 
                 throw new InvalidArgumentException(
                     "Invalid receiver ID"

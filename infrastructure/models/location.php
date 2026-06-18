@@ -3,7 +3,7 @@
     require_once root_dir . "/models/base.php";
 
     class Location extends BaseModel {
-        private int $ID;
+        private ?int $ID = null;
         private string $building;
         private string $room;
         private int $attendanceCapacity;
@@ -29,7 +29,7 @@
 
         private function setRoom(string $r): void {
             $specialChars = $this->doesContainSpecialChars($r);
-            if ($specialChars) throw new InvalidArgumentException("The name of building can't contain special characters or symbols!");
+            if ($specialChars) throw new InvalidArgumentException("The name of room can't contain special characters or symbols!");
             $this->room = $r;
         }
 
@@ -38,7 +38,7 @@
             $this->attendanceCapacity = $x;
         }
 
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {return $this->ID;}
         public function getBuilding(): string {return $this->building;}
         public function getRoom(): string {return $this->room;}
         public function getMaximumCapacity(): int {return $this->attendanceCapacity;}
