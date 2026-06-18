@@ -42,26 +42,16 @@
 
         // Setters / Getters
         private function setName(string $f, string $l): void {
-            $normalize = function (string $str): string {
-                $chars = str_split($str);
-                $chars[0] = strtoupper($chars[0]);
-                for ($i = 1; $i < count($chars); $i++) {
-                    $chars[$i] = strtolower($chars[$i]);
-                }
-                $x = implode('', $chars);
-                return $x;
-            };
-            $hasNumber = function (string $str): bool {
-                return preg_match("/\d/", $str);
-            };
             if (gettype($f) !== "string" || gettype($l) !== "string") throw new InvalidArgumentException("Data type must be string!");
             if ($this->doesContainSpecialChars($f) || $this->doesContainSpecialChars($l)
-                || $hasNumber($f) || $hasNumber($l)) throw new InvalidArgumentException("Name can't have any special characters!");
-            // dickinson -> Dickinson
-            $transformedF = $normalize($f);
-            $transformedL = $normalize($l);
-            $n = implode(" ", [$transformedF, $transformedL]);
-            $this->name = $n;
+                || preg_match("/\d/", $f) || preg_match("/\d/", $l)) throw new InvalidArgumentException("Name can't have any special characters!");
+            
+            // Normalize names properly with UTF-8 support
+            $transformedF = mb_convert_case(trim($f), MB_CASE_TITLE, "UTF-8");
+            $transformedL = mb_convert_case(trim($l), MB_CASE_TITLE, "UTF-8");
+            
+            // Store as a single string separated by pipe to easily split later without losing data.
+            $this->name = $transformedF . "|" . $transformedL;
         }
 
        private function setAge(int $a): void {
@@ -171,7 +161,10 @@
             $this->password = $p;
         }
 
-        public function getName(): string {return $this->name;}
+        public function getName(): string {
+            $parts = explode('|', $this->name);
+            return $parts[0] . " " . ($parts[1] ?? "");
+        }
         public function getPhoneNumber(): string {return $this->phoneNumber;}
         public function getEmail(): string {return $this->email;}
         public function getID(): string {return $this->ID;}
@@ -179,14 +172,12 @@
         public function getAge(): int {return $this->age;}
         public function getPassword(): string {return $this->password;}
         public function getFirstname(): string {
-            $full = $this->getName();
-            $parts = explode(' ', $full);
+            $parts = explode('|', $this->name);
             return $parts[0];
         }
         public function getLastname(): string {
-            $full = $this->getName();
-            $parts = explode(' ', $full);
-            return $parts[1];
+            $parts = explode('|', $this->name);
+            return $parts[1] ?? "";
         }
     }
 
