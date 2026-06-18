@@ -219,18 +219,18 @@
         }
 
         public function findByRole(RoleTitle $title): array {
-            $roleIDs = $this->getAllFromColumn(["role_ID"]);
-            $roleIDs = array_map(
-                fn ($row) => (int)$row, $roleIDs
-            );
-            $equivalent = [];
-            for ($i = 0; $i < count($roleIDs); $i++) {
-                $curr = ($this->repo)->findByID($roleIDs[$i]);
-                if ($curr->getTitle() === $title) {
-                    $equivalent[] = $curr;
-                }
-            }
-            return $equivalent;
+            $roles = ($this->repo)->findByTitle($title);
+            if (empty($roles)) return [];
+            
+            $roleIDs = array_map(fn($r) => $r->getID(), $roles);
+            $placeholders = implode(',', array_fill(0, count($roleIDs), '?'));
+            
+            $sql = "SELECT * FROM `Club_Membership` WHERE role_ID IN ($placeholders)";
+            $stmt = $this->getConnection()->prepare($sql);
+            $stmt->execute($roleIDs);
+            
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return array_map(fn($row) => $this->hydrate($row), $rows);
         }
     }
 ?>
