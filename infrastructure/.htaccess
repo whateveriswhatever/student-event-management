@@ -13,11 +13,13 @@
 
 </IfModule>
 
-# Chặn truy cập trực tiếp vào file .env qua HTTP
-# Tránh lộ DB credentials khi deploy lên server
-<Files ".env">
+# Chặn truy cập trực tiếp vào các file và thư mục nhạy cảm
+<FilesMatch "\.(env|sql|md|ini|log)$">
     Require all denied
-</Files>
+</FilesMatch>
+
+RewriteRule ^config/ - [F,L]
+RewriteRule ^app/ - [F,L]
 
 # NOTE (production): Đổi Access-Control-Allow-Origin trong index.php
 # từ "*" sang domain cụ thể trước khi deploy lên môi trường thật
