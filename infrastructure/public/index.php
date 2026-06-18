@@ -21,6 +21,31 @@
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
+    // Security headers
+    header("X-Frame-Options: SAMEORIGIN");
+    header("X-XSS-Protection: 1; mode=block");
+    header("X-Content-Type-Options: nosniff");
+    header("Referrer-Policy: strict-origin-when-cross-origin");
+    header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://api.dicebear.com; img-src 'self' data: https://api.dicebear.com;");
+
+    // Rate Limiting (Basic)
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateLimitKey = 'rate_limit_' . $ip;
+    if (!isset($_SESSION[$rateLimitKey])) {
+        $_SESSION[$rateLimitKey] = ['count' => 1, 'time' => time()];
+    } else {
+        $elapsed = time() - $_SESSION[$rateLimitKey]['time'];
+        if ($elapsed < 60) {
+            $_SESSION[$rateLimitKey]['count']++;
+            if ($_SESSION[$rateLimitKey]['count'] > 100) { // 100 requests per minute
+                http_response_code(429);
+                exit("Too Many Requests. Please wait a minute.");
+            }
+        } else {
+            $_SESSION[$rateLimitKey] = ['count' => 1, 'time' => time()];
+        }
+    }
+
     $requestURI = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
     $requestMethod = $_SERVER["REQUEST_METHOD"];
 
