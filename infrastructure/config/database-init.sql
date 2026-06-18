@@ -24,7 +24,7 @@ drop table if exists `Profile`;
 create table `Profile` (
     `ID`         int          auto_increment primary key,
     `student_ID` varchar(8)   not null,
-    `major`      varchar(10)  not null,
+    `major`      varchar(100) not null,
     `class`      char(5)      not null,
     `degree`     enum('undergraduate', 'postgraduate') not null default 'undergraduate'
 );
@@ -36,7 +36,7 @@ create table `Student` (
     `age`          int         not null default 18,
     `profile_ID`   int         not null,
     `phone_number` varchar(12) not null,
-    `email`        varchar(36) not null unique,
+    `email`        varchar(255) not null unique,
     `password`     varchar(95) not null,
 
     foreign key (`profile_ID`) references `Profile`(`ID`)
@@ -45,13 +45,13 @@ create table `Student` (
 create table `Location` (
     `ID`                  int         auto_increment primary key,
     `building`            varchar(20) not null,
-    `room`                varchar(4)  not null,
+    `room`                varchar(20)  not null,
     `attendance_capacity` int         not null
 );
 
 create table `Club` (
     `ID`           int          auto_increment primary key,
-    `name`         varchar(55)  not null,
+    `name`         varchar(100) not null,
     `description`  varchar(555) not null,
     `founded_date` datetime     default current_timestamp,
     `logo_url`     varchar(222) not null default '',
@@ -119,7 +119,7 @@ create table `Announcement` (
     `ID`          int          auto_increment primary key,
     `club_ID`     int          not null,
     `author_ID`   varchar(8)   not null,
-    `title`       varchar(55)  not null,
+    `title`       varchar(255) not null,
     `description` varchar(1000) not null,
 
     foreign key (`club_ID`)   references `Club`(`ID`),
