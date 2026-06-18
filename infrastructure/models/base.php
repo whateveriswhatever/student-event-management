@@ -29,11 +29,15 @@
         /** Tìm nhiều bản ghi theo điều kiện AND */
         public function findViaCriteria(array $criteria): array {
             try {
+                if (empty($criteria)) {
+                    throw new InvalidArgumentException("Criteria cannot be empty in findViaCriteria");
+                }
                 $keys   = array_keys($criteria);
                 $vals   = array_values($criteria);
-                $where  = implode(" AND ", array_map(fn($k) => "{$k} = :{$k}", $keys));
+                $where  = implode(" AND ", array_map(fn($k) => "`{$k}` = :{$k}", $keys));
                 $params = [];
-                for ($i = 0; $i < count($keys); $i++) {
+                $len = count($keys);
+                for ($i = 0; $i < $len; $i++) {
                     $params[":{$keys[$i]}"] = $vals[$i];
                 }
                 $stmt = $this->dbConnection->prepare(
@@ -57,7 +61,15 @@
         public function getAllFromColumn(array $cols): array {
             try {
                 // Tên cột không thể bind bằng prepared statement — dùng whitelist
-                $selectCols = implode(', ', $cols);
+                $safeCols = [];
+                foreach ($cols as $col) {
+                    if (preg_match('/^[a-zA-Z0-9_]+$/', $col)) {
+                        $safeCols[] = "`{$col}`";
+                    } else {
+                        throw new InvalidArgumentException("Invalid column name: " . htmlspecialchars($col));
+                    }
+                }
+                $selectCols = implode(', ', $safeCols);
                 $stmt = $this->dbConnection->prepare(
                     "SELECT {$selectCols} FROM `{$this->tableName}`"
                 );
@@ -84,9 +96,10 @@
                 } else {
                     $keys   = array_keys($criteria);
                     $vals   = array_values($criteria);
-                    $where  = implode(" AND ", array_map(fn($k) => "{$k} = :{$k}", $keys));
+                    $where  = implode(" AND ", array_map(fn($k) => "`{$k}` = :{$k}", $keys));
                     $params = [];
-                    for ($i = 0; $i < count($keys); $i++) {
+                    $len = count($keys);
+                    for ($i = 0; $i < $len; $i++) {
                         $params[":{$keys[$i]}"] = $vals[$i];
                     }
                     $stmt = $this->dbConnection->prepare(
@@ -119,12 +132,16 @@
         /** Thêm bản ghi mới */
         public function add(array $data): bool {
             try {
+                if (empty($data)) {
+                    throw new InvalidArgumentException("Data cannot be empty in add");
+                }
                 $cols        = array_keys($data);
                 $vals        = array_values($data);
-                $insertedCols = implode(", ", $cols);
+                $insertedCols = implode(", ", array_map(fn($c) => "`{$c}`", $cols));
                 $bindParams  = implode(", ", array_map(fn($c) => ":{$c}", $cols));
                 $params = [];
-                for ($i = 0; $i < count($cols); $i++) {
+                $len = count($cols);
+                for ($i = 0; $i < $len; $i++) {
                     $params[":{$cols[$i]}"] = $vals[$i];
                 }
                 $stmt = $this->dbConnection->prepare(
@@ -140,20 +157,25 @@
         /** Cập nhật bản ghi theo điều kiện */
         public function updateViaCriteria(array $updatedData, array $criteria): bool {
             try {
+                if (empty($updatedData) || empty($criteria)) {
+                    throw new InvalidArgumentException("Data and criteria cannot be empty in updateViaCriteria");
+                }
                 $newDataKeys = array_keys($updatedData);
                 $newDataVals = array_values($updatedData);
                 $whereKeys   = array_keys($criteria);
                 $whereVals   = array_values($criteria);
 
-                $setStmt = implode(", ", array_map(fn($k) => "{$k} = :set_{$k}", $newDataKeys));
-                $where   = implode(" AND ", array_map(fn($k) => "{$k} = :wh_{$k}", $whereKeys));
+                $setStmt = implode(", ", array_map(fn($k) => "`{$k}` = :set_{$k}", $newDataKeys));
+                $where   = implode(" AND ", array_map(fn($k) => "`{$k}` = :wh_{$k}", $whereKeys));
 
                 // Dùng prefix set_ / wh_ để tránh xung đột key khi cùng tên cột
                 $params = [];
-                for ($j = 0; $j < count($newDataKeys); $j++) {
+                $newDataLen = count($newDataKeys);
+                for ($j = 0; $j < $newDataLen; $j++) {
                     $params[":set_{$newDataKeys[$j]}"] = $newDataVals[$j];
                 }
-                for ($i = 0; $i < count($whereKeys); $i++) {
+                $whereLen = count($whereKeys);
+                for ($i = 0; $i < $whereLen; $i++) {
                     $params[":wh_{$whereKeys[$i]}"] = $whereVals[$i];
                 }
 
@@ -170,11 +192,15 @@
         /** Xóa bản ghi theo điều kiện */
         public function deleteViaCriteria(array $criteria): bool {
             try {
+                if (empty($criteria)) {
+                    throw new InvalidArgumentException("Criteria cannot be empty in deleteViaCriteria");
+                }
                 $keys   = array_keys($criteria);
                 $vals   = array_values($criteria);
-                $where  = implode(" AND ", array_map(fn($k) => "{$k} = :{$k}", $keys));
+                $where  = implode(" AND ", array_map(fn($k) => "`{$k}` = :{$k}", $keys));
                 $params = [];
-                for ($i = 0; $i < count($keys); $i++) {
+                $len = count($keys);
+                for ($i = 0; $i < $len; $i++) {
                     $params[":{$keys[$i]}"] = $vals[$i];
                 }
                 $stmt = $this->dbConnection->prepare(
@@ -214,10 +240,6 @@
 
         public function getTableName(): string {
             return $this->tableName;
-        }
-
-        public function setTableName(string $name): void {
-            $this->tableName = $name;
         }
 
         /** Subclass bắt buộc implement để map DB row → Entity object */
