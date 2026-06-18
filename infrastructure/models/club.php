@@ -76,7 +76,11 @@
             $this->status = $s;
         }
 
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {
+            return $this->ID;
+        public function getID(): ?int {
+            return $this->ID;
+        }
         public function getName(): string {return $this->name;}
         public function getDescription(): string {return $this->description;}
         public function getFoundedDate(): DateTime {return $this->foundedDate;}
@@ -116,16 +120,9 @@
         public function findByName(string $n): ?Club {
             $n = strtolower($n);
             $data = $this->findViaCriteria(["name" => $n]);
-            if (empty($data)) throw new InvalidArgumentException("No one participates into the club!");
+            if (empty($data)) throw new InvalidArgumentException("Club not found!");
 
-            $row = $data[0];
-            return new Club(
-                $row["ID"],
-                $row["name"],
-                $row["description"],
-                $row["founded_date"],
-                $row["logo_url"],
-                $row["status"]);
+            return $this->hydrate($data[0]);
         }
 
         public function save(Club $c): bool {
@@ -133,9 +130,9 @@
             return $this->updateViaCriteria([
                 "name" => $c->getName(),
                 "description" => $c->getDescription(),
-                "founded_date" => $c->getFoundedDate(),
+                "founded_date" => $c->getFoundedDate()->format("Y-m-d H:i:s"),
                 "logo_url" => $c->getLogoURL(),
-                "status" => $c->getStatus()
+                "status" => $c->getStatus()->value
             ], ["ID" => $c->getID()]);
         }
 
@@ -151,7 +148,8 @@
                 (string)$row["description"],
                 $fD,
                 (string)$row["logo_url"],
-                Status::from($row["status"])
+                Status::from($row["status"]),
+                (int)$row["ID"]
             );
             return $club;
         }

@@ -10,7 +10,7 @@
 
 
     class Profile extends BaseModel {
-        private string $ID;
+        private ?int $ID;
         private string $studentID;
         private string $major;
         private string $class;
@@ -85,7 +85,9 @@
         }
 
         public function getMajor(): string {return $this->major;}
-        public function getProfileID(): int {return $this->ID;}
+        public function getProfileID(): ?int {
+            return $this->ID;
+        }
         public function getStudentID(): string {return $this->studentID;}
         public function getDegree(): DegreeType {return $this->degree;}
         public function getClass(): string {return $this->class;}
@@ -160,12 +162,13 @@
         }
 
         #[Override]
-        public function hydrate(array $row): Profile
+        protected function hydrate(array $row): Profile
         {
             return new Profile(
                 (string)$row["student_ID"],
                 (string)$row["major"],
-                DegreeType::from((string)$row["degree"])
+                DegreeType::from((string)$row["degree"]),
+                (int)$row["ID"]
             );
         }
     }

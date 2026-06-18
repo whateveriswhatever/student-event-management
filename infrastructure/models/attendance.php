@@ -22,7 +22,8 @@
         }
 
         private function setID(?int $id): void {
-            if ($id !== null && $id > 0) $this->ID = $id; 
+            if ($id !== null && $id <= 0) throw new InvalidArgumentException("ID must be positive");
+            $this->ID = $id; 
         }
 
         private function setRegisteredID(int $id): void {
@@ -70,7 +71,7 @@
             );
         }
 
-        public function hydrate(array $row): Attendance {
+        protected function hydrate(array $row): Attendance {
             if (empty($row)) throw new RuntimeException("Empty rows!");
             try {
                 $checkinTime = new DateTime($row["checkin_time"]);
@@ -80,7 +81,8 @@
             return new Attendance(
                 (int)$row["registration_ID"],
                 $checkinTime,
-                AttendanceStatus::from($row["attendance_status"])
+                AttendanceStatus::from($row["attendance_status"]),
+                (int)$row["ID"]
             );
         }
 

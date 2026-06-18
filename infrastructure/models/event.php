@@ -265,11 +265,11 @@
     class EventRegistration {
         private ?int $ID;
         private int $eventID;
-        private int $studentID;
+        private string $studentID;
         private DateTime $registeredAt;
         private RegisteredStatus $status;
 
-        public function __construct(int $eID, int $sID, DateTime $rdAt, $s = null, ?int $id = null) {
+        public function __construct(int $eID, string $sID, DateTime $rdAt, ?RegisteredStatus $s = null, ?int $id = null) {
             $this->ID = $id;
             $this->setEventID($eID);
             $this->setStudentID($sID);
@@ -286,8 +286,8 @@
             $this->eventID = $eID;
         }
 
-        private function setStudentID(int $sID): void {
-            if ($sID < 1) throw new InvalidArgumentException("Invalid student ID");
+        private function setStudentID(string $sID): void {
+            if (empty($sID)) throw new InvalidArgumentException("Invalid student ID");
             $this->studentID = $sID;
         }
 
@@ -380,7 +380,7 @@
             );
         }
 
-        public function findAllRegistrationsFromStudent(int $sID): array {
+        public function findAllRegistrationsFromStudent(string $sID): array {
             $rows = $this->findViaCriteria(["student_ID" => $sID]);
             return array_map(
                 fn($row) => $this->hydrate($row), $rows
@@ -403,9 +403,10 @@
 
                 $event = new EventRegistration(
                     (int)$row["event_ID"],
-                    (int)$row["student_ID"],
+                    (string)$row["student_ID"],
                     $rA,
-                    $status
+                    $status,
+                    (int)$row["ID"]
                 );
                 return $event;
             } catch (PDOException $ex) {

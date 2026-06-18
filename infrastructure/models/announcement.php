@@ -48,6 +48,7 @@
 
         public function getID(): ?int {return $this->ID;}
         public function getAuthorID(): int {return $this->authorID;}
+        public function getClubID(): int {return $this->clubID;}
         public function getTitle(): string {return $this->title;}
         public function getContent(): string {return $this->description;}
 
@@ -84,7 +85,10 @@
             if ($clubID < 1) throw new InvalidArgumentException("Invalid club ID!"); 
             $data = $this->findViaCriteria(["club_ID" => $clubID]);
             if (empty($data)) return [];
-            return $data;
+            return array_map(
+                fn($row) => $this->hydrate($row),
+                $data
+            );
         }
 
         #[Override]
@@ -92,8 +96,8 @@
         {
             return new Announcement(
                 (int)$row["ID"],
-                (int)$row["club_ID"],
                 (int)$row["author_ID"],
+                (int)$row["club_ID"],
                 (string)$row["title"],
                 (string)$row["description"]
             );
