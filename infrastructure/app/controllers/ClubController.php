@@ -23,29 +23,54 @@
         }
 
         public function index(): void {
-            $rawClubs = ($this->clubRepo)->all();
-            $hydatedClubs = [];
-            for ($i = 0; $i < count($rawClubs); $i++) {
-                $hydatedClubs[] = ($this->clubRepo)->hydrate($rawClubs[$i]);
-            }
-            
-            // Fetching user membership
-            $userMemberships = [];
-            if (isset($_SESSION["user_ID"])) {
-                $studentID = (string)$_SESSION["user_ID"];
+            $searchName = trim($_GET["search_name"] ?? "");
+            $searchID = (int)($_GET["search_ID"] ?? 0);
+            $hydratedClubs = [];
 
-                // Fetching all membership rows for this student
-                $memberships = ($this->membershipRepo)->findViaCriteria(["student_ID" => $studentID]);
-
-                if (!empty($memberships)) {
-                    foreach ($memberships as $m) {
-                        $userMemberships[(int)$m["club_ID"]] = $m["membership_status"];
+            try {
+                if ($searchID > 0) {
+                    // Explicit ID search priority
+                    $club = ($this->clubRepo)->findByID($searchID);
+                    if ($club) {
+                        $hydratedClubs[] = $club;
+                    }
+                } else if (!empty($searchName)) {
+                    // Fallback to name search
+                    $hydratedClubs = ($this->clubRepo)->findByName($searchName);
+                } else {
+                    // Default: fetching all
+                    $rawClubs = ($this->clubRepo)->all();
+                    for ($i = 0; $i < count($rawClubs); $i++) {
+                        $hydratedClubs[] = ($this->clubRepo)->hydrate($rawClubs[$i]);
                     }
                 }
+            
+                // Fetching user membership
+                $userMemberships = [];
+                if (isset($_SESSION["user_ID"])) {
+                    $studentID = (string)$_SESSION["user_ID"];
+
+                    // Fetching all membership rows for this student
+                    $memberships = ($this->membershipRepo)->findViaCriteria(["student_ID" => $studentID]);
+
+                    if (!empty($memberships)) {
+                        foreach ($memberships as $m) {
+                            $userMemberships[(int)$m["club_ID"]] = $m["membership_status"];
+                        }
+                    }
+                }
+
+                $this->render("clubs/index", ["clubs" => $hydratedClubs,
+                                            "userMemberships" => $userMemberships]);
+            } catch (Exception $ex) {
+                // $this->redirect(base_folder_path . "/clubs?err={$ex->getMessage()}");
+                $this->render("clubs/index", [
+                    "clubs" => $hydratedClubs,
+                    "error" => $ex->getMessage()
+                ]);
             }
 
-            $this->render("clubs/index", ["clubs" => $hydatedClubs,
-                                            "userMemberships" => $userMemberships]);
+            
         }
 
         public function store(): void {

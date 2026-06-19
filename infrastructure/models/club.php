@@ -123,20 +123,17 @@
             return $this->hydrate($row);
         }
 
-        public function findByName(string $n): ?Club {
+        public function findByName(string $n): array {
             $n = strtolower($n);
             $data = $this->findViaCriteria(["name" => $n]);
-            if (empty($data)) throw new InvalidArgumentException("No one participates into the club!");
+            if (empty($data)) {
+                throw new InvalidArgumentException("not found!");
+            }
+            
 
-            $row = $data[0];
-            return new Club(
-                $row["name"],
-                $row["description"],
-                $row["founded_date"],
-                $row["logo_url"],
-                $row["status"],
-                $row["ID"],
-                $row["total_members"]);
+            return array_map(
+                fn ($row) => $this->hydrate($row), $data
+            );
         }
 
         public function save(Club $c): bool {

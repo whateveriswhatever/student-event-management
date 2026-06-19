@@ -13,14 +13,14 @@
 
 
 <body>
-    <?php
+    <!-- <?php
         if (isset($error)):
     ?>
         <div class="error-alert" style="background-color: #f8d7da; color: #721c24; padding: 15px; margin: 20px auto; max-width: 1200px; border-radius: 6px; font-weight: bold; border-left: 5px solid #dc3545; display: flex; align-items: center; gap: 10px;">
             <span>Alert</span>
             <span>Error saving club: <?= htmlspecialchars($error) ?></span>
         </div>
-    <?php endif; ?>
+    <?php endif; ?> -->
 
     <?php
         if (isset($_GET["success"]) && $_GET["success"] === "registered"):
@@ -35,28 +35,60 @@
         require_once root_dir . "/app/views/partials/navbar.php";
     ?>
 
+    <?php 
+        $clubs = $clubs ?? [];
+        $userMemberships = $userMemberships ?? []; 
+    ?>
+
     <div class="container">
-        <div class="header-section">
-            <h2 class="page-title">Explore Available Clubs</h2>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <div style="flex: 1; max-width: 400px; margin-right: 2rem;">
-                    <input type="text" id="club-search" class="search-bar" placeholder="Search by Club ID or Name...">
+        <!-- Header section -->
+        <div class="clubs-header">
+            <div class="header-row">
+                <div class="header-info">
+                    <h2 class="page-title">Explore</h2>
+                    <p class="page-subtitle">
+                        Discover communities, activities, and events on campus
+                    </p>
                 </div>
-                
+
                 <?php if (isset($_SESSION["user_ID"])): ?>
-                    <div>
-                        <a href="<?= base_folder_path ?>/clubs/create" class="btn btn-primary" style="text-decoration: none; padding: 0.75rem 1.5rem; display: inline-block;">
-                            + Create New Club
+                    <button class="btn-primary create-btn">
+                        <a href="<?= base_folder_path ?>/clubs/create"
+                        style="text-decoration: none; color: #fff;">
+                            + Create
                         </a>
-                    </div>
+                    </button>
+                    
+                <?php endif ?>
+            </div>
+
+            <form action="<?= base_folder_path ?>/clubs"
+                method="GET" class="search-form">
+
+                <input type="text" name="search_name" placeholder="Search by name"
+                    value="<?= htmlspecialchars($_GET["search_name"] ?? "") ?>"
+                    class="search-input" />
+
+                <input type="number" name="search_ID" placeholder="Search by ID"
+                    min="1" value="<?= htmlspecialchars($_GET["search_ID"] ?? '') ?>"
+                    class="search-id" />
+
+                <button type="submit" class="btn-primary search-btn">Search</button>
+                    
+                <?php if (!empty($_GET["search_name"]) || !empty($_GET["search_ID"])): ?>
+                    <a href="<?= base_folder_path ?>/clubs"
+                        class="btn btn-secondary">
+                        Clear
+                    </a>
                 <?php endif; ?>
+            </form>
+
+            <div class="club-count">
+                Showing <?= count($clubs) ?> clubs
             </div>
         </div>
 
-        <?php 
-            $clubs = $clubs ?? [];
-            $userMemberships = $userMemberships ?? []; 
-        ?>
+        
         <div class="grid" id="club-list">
             <?php foreach ($clubs as $club): ?>
                 <?php
