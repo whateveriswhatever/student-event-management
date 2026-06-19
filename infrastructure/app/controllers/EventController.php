@@ -27,6 +27,11 @@
             $searchQuery = $_GET["search"] ?? '';
             $studentID = $_SESSION["user_ID"] ?? null;
 
+            if ($studentID === null) {
+                // If user doesn't login, redirecting them to login page
+                $this->redirect(base_folder_path . "/login");
+            }
+
             if (!empty($searchQuery)) {
                 $events = ($this->eventRepo)->searchByName($searchQuery);
             } else {
