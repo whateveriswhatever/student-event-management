@@ -418,10 +418,12 @@
         class="modal-overlay" 
         style="display:none;"
         data-club-id="<?= (int)$club->getID() ?>"
-        data-base-path="<?= base_folder_path ?>">
+        data-base-path="<?= base_folder_path ?>"
+        data-club-name="<?= htmlspecialchars($club->getName()) ?>">
         <div class="modal-content" style="max-width:640px; width:95%;">
             <div class="modal-header">
                 <h3 style="margin:0;">📊 Club Admin Dashboard</h3>
+                <button id="export-dashboard-csv-btn">Export to CSV</button>
                 <button id="close-admin-modal-btn" class="close-btn">&times;</button>
             </div>
             <div class="modal-body" style="padding: 20px; max-height: 70vh; overflow-y: auto;">
@@ -435,5 +437,6 @@
     <script src="<?= ASSET_URL ?>/assets/js/ClubDetailPage.js?v=<?= time(); ?>"></script>
     <script src="<?= ASSET_URL ?>/assets/js/EventComments.js?v=<?= time(); ?>"></script>
     <script src="<?= ASSET_URL ?>/assets/js/ClubAdminDashboard.js?v=<?= time(); ?>"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/DashboardExportData.js?v=<?= time(); ?>"></script>
 </body>
 </html>
