@@ -167,6 +167,40 @@
             $all = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return count($all) > 0 ? true : false;
         }
+
+        public function findViaCriteriaExceptFor(array $criteria, array $exceptCriteria): array {
+            try {
+                $cols = array_keys($criteria);
+                $vals = array_values($criteria);
+                $exceptCols = array_keys($exceptCriteria);
+                $exceptVals = array_values($exceptCriteria); 
+                $where = implode(" , ", array_map(function ($key) {return "{$key} = :{$key}";}, $cols));
+                $exceptWhere = implode(" , ", array_map(function ($key) {return "{$key} != :{$key}";}, $exceptCols));
+
+                $params = [];
+                for ($i = 0; $i < count($cols); $i++) {
+                    $params[":{$cols[$i]}"] = $vals[$i];
+                }
+                for ($j = 0; $j < count($exceptCols); $j++) {
+                    $params[":{$exceptCols[$j]}"] = $exceptVals[$j];
+                }
+
+                $query = "
+                    select
+                        *
+                    from {$this->tableName}
+                    where {$where}
+                    and {$exceptWhere}
+                ";
+                $stmt = ($this->dbConnection)->prepare($query);
+                $stmt->execute($params);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $data;
+            } catch (PDOException $ex) {
+                error_log($ex->getMessage());
+                throw $ex;
+            }
+        }
     }
 
     abstract class BaseModel {
