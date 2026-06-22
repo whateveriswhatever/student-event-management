@@ -1,6 +1,9 @@
 <?php
     require_once root_dir . "/config/database-config.php";
     require_once root_dir . "/models/profile.php";
+    require_once root_dir . "/models/club.php";
+    require_once root_dir . "/models/membership.php";
+    require_once root_dir . "/models/event.php";
     /*
         Student entity:
         - Business state 
@@ -182,8 +185,14 @@
     }
 
     class StudentRepository extends BaseRepository {
+        private ClubRepository $clubRepo;
+        private MembershipRepository $membershipRepo;
+        private EventRegistrationRepository $eventRegisRepo;
         public function __construct() {
             parent::__construct("student");
+            $this->clubRepo = new ClubRepository();
+            $this->membershipRepo = new MembershipRepository();
+            $this->eventRegisRepo = new EventRegistrationRepository();
         }
 
         public function findByID(string $ID): ?Student {
@@ -263,6 +272,77 @@
                 (int)$row["profile_ID"],
                 (string)$row["password"]
             );
+        }
+
+        public function getAllJoinedClubs(int $sID): array {
+            // Get all memberships
+            $clubIds = ($this->membershipRepo)->getAllJoinedClubIDsViaStudentID($sID);
+            $clubs = [];
+            for ($i = 0; $i < count($clubIds); $i++) {
+                $clubs[] = ($this->clubRepo)->findByID($clubIds[$i]);
+            }
+
+            return $clubs;
+        }
+
+        public function getAllJoinedEvents(int $sID): array {
+            // Get all joined events
+            $events = ($this->eventRegisRepo)->findAllEventsFromAStudent($sID);
+            return $events;
+        }
+
+        public function findByName(string $n, string $providerID): array {
+            $n = trim($n);
+            $process = function (string $input): array {
+                $input = trim($input);
+                $storage = preg_split("/\s+/", $input, -1, PREG_SPLIT_NO_EMPTY);
+                for ($i = 0; $i < count($storage); $i++) {
+                    $curr = $storage[$i];
+                    $curr = strtolower($curr);
+                    $curr[0] = strtoupper($curr[0]);
+                    $storage[$i] = $curr;
+                }
+                return $storage;
+            };
+            
+            $storage = $process($n);
+            $tokens = [
+                "firstname" => $storage[0],
+                "lastname"  => []
+            ];
+            for ($i = 1; $i < count($storage); $i++) {
+                $tokens["lastname"][] = $storage[$i];
+            }
+            $tokens["lastname"] = implode(" ", $tokens["lastname"]);
+            // echo "<div>{$tokens['lastname']}</div>";
+            $stmt = ($this->dbConnection)->prepare("
+                select
+                    *
+                from {$this->tableName}
+                where (
+                    firstname like :f1
+                    or lastname like :f2
+                ) and (
+                    firstname like :l1
+                    or lastname like :l2
+                ) and
+                ID != :id
+            ");
+            $stmt->execute([
+                ":f1"   => '%' . $tokens["firstname"] . '%',
+                ":f2"   => '%' . $tokens["firstname"] . '%',
+                ":l1"   => '%' . $tokens["lastname"] . '%',
+                ":l2"   => '%' . $tokens["lastname"] . '%',
+                ":id"   => $providerID
+            ]);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($data)) {
+                return array_map(
+                    fn ($row) => $this->hydrate($row), $data
+                );
+            } else {
+                return [];
+            }
         }
     }
 

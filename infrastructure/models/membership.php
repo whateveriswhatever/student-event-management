@@ -2,9 +2,10 @@
     require_once root_dir . "/config/database-config.php";
     require_once root_dir . "/models/base.php";
     require_once root_dir . "/models/role.php";
+    require_once root_dir . "/models/club.php";
 
     enum MembershipStatus: string {
-        case APPROVE = "approval";
+        case APPROVE = "active";
         case REJECT = "rejected";
         case LEAVE = "left";
         case PROHIBIT = "banned";
@@ -13,16 +14,14 @@
 
     class Membership extends BaseModel {
         private ?int $ID;
-        private int $studentID;
+        private string $studentID;
         private int $clubID;
         private int $roleID;
         private DateTime $joinedAt;
         private MembershipStatus $status;
 
-        public function __construct(int $sID, int $cID, int $rID, DateTime $jAt, ?MembershipStatus $s = null, ?int $id = null) {
-            if ($id !== null) {
-                $this->setID($id);
-            }
+        public function __construct(int $sID, int $cID, int $rID, DateTime $jAt, ?string $s = "pending", ?int $id = null) {
+            $this->setID($id);
             $this->setStudentID($sID);
             $this->setClubID($cID);
             $this->setRoleID($rID);
@@ -30,31 +29,19 @@
             $this->setStatus($s);
         }
 
-        private function setID(int $id): void {
-            if ($id <= 0) {
-                throw new InvalidArgumentException("Invalid ID: must be greater than 0!");
-            }
+        private function setID(?int $id): void {
             $this->ID = $id;
         }
 
-        private function setStudentID(int $id): void {
-            if ($id <= 0) {
-                throw new InvalidArgumentException("Invalid student ID: must be greater than 0!");
-            }
+        private function setStudentID(string $id): void {
             $this->studentID = $id;
         }
 
         private function setClubID(int $id): void {
-            if ($id <= 0) {
-                throw new InvalidArgumentException("Invalid club ID: must be greater than 0!");
-            }
             $this->clubID = $id;
         }
 
         private function setRoleID(int $id): void {
-            if ($id <= 0) {
-                throw new InvalidArgumentException("Invalid role ID: must be greater than 0!");
-            }
             $this->roleID = $id;
         }
 
@@ -82,7 +69,7 @@
             $this->status = MembershipStatus::PENDING;
         }
 
-        public function setStatus(?string $s): void {
+        private function setStatus(?string $s): void {
             switch ($s) {
                 case "approve":
                     $this->markApprove();
@@ -102,7 +89,7 @@
             }
         }
         
-        public function getID(): int {return $this->ID;}
+        public function getID(): ?int {return $this->ID;}
         public function getStudentID(): int {return $this->studentID;}
         public function getClubID(): int {return $this->clubID;}
         public function getRoleID(): int {return $this->roleID;}
@@ -112,13 +99,15 @@
 
     class MembershipRepository extends BaseRepository {
         private RoleRepository $repo;
+        private ClubRepository $clubRepo;
 
         public function __construct() {
-            parent::__construct("Club_Membership");
+            parent::__construct("club_membership");
             $this->repo = new RoleRepository();
+            $this->clubRepo = new ClubRepository();
         }
 
-        public function createJoinRequest(int $sID, int $cID, int $rID): Membership {
+        public function createJoinRequest(string $sID, int $cID, int $rID): Membership {
             $existing = $this->findViaCriteria([
                 "student_ID" => $sID,
                 "club_ID" => $cID,
@@ -135,19 +124,27 @@
                 new DateTime()
             );
             $isSucess = $this->add([
-                "student_ID"       => $membership->getStudentID(),
-                "club_ID"          => $membership->getClubID(),
-                "joined_at"        => $membership->getJoinedTimeline()->format("Y-m-d H:i:s"),
-                "membership_status" => $membership->getStatus()->value,
-                "role_ID"          => $membership->getRoleID()
+                "student_ID" => $membership->getStudentID(),
+                "club_ID" => $membership->getClubID(),
+                "joined_at" => $membership->getJoinedTimeline()->format("Y-m-d H:i:s"),
+                "membership_status" => ($membership->getStatus())->value,
+                "role_ID" => $membership->getRoleID()
             ]);
 
             if (!$isSucess) throw new RuntimeException("Failed to create membership request");
-
-            return $membership;
+            $generatedID = ($this)->getLatestID();
+            return new Membership(
+                $sID,
+                $cID,
+                $rID,
+                $membership->getJoinedTimeline(),
+                "pending",
+                $generatedID
+            ); 
+            
         }
 
-        protected function hydrate(array $row): Membership {
+        public function hydrate(array $row): Membership {
             if (empty($row)) throw new RuntimeException("Empty row!");
 
             try {
@@ -157,7 +154,7 @@
                     (int)$row["club_ID"],
                     (int)$row["role_ID"],
                     $jAt,
-                    MembershipStatus::from($row["membership_status"]),
+                    (string)$row["membership_status"],
                     (int)$row["ID"]
                 );
                 return $membership;
@@ -168,20 +165,25 @@
         }
 
         public function findByID(int $id): ?Membership {
-            $row = $this->findOne(["ID" => $id]);
+            $row = $this->findViaCriteria(["ID" => $id]);
             if ($row === null) return null;
             return $this->hydrate($row);
         }
 
         public function findMembership(int $sID, int $cID): ?Membership {
-            $row = $this->findOne(["student_ID" => $sID, "club_ID" => $cID]);
-            if ($row === null) return null;
-            return $this->hydrate($row);
+            $rows = $this->findViaCriteria([
+                "student_ID" => $sID,
+                "club_ID" => $cID
+            ]);
+            if (empty($rows)) return null;
+            return $this->hydrate($rows[0]);
         }
 
-        public function findAllMembersInAClub(int $cID): array {
-            $rows = $this->findViaCriteria(["club_ID" => $cID]);
-            return array_map(fn($row) => $this->hydrate($row), $rows);
+        public function getJoinedClubIDOfAStudent(string $sID): array {
+            $rows = $this->findViaCriteria(["student_ID" => $sID]);
+            return array_map(
+                fn ($row) => (int)$row["club_ID"], $rows
+            );
         }
 
         public function findAllMembershipFromAStudent(int $sID): array {
@@ -190,23 +192,33 @@
         }
 
         public function approveMembership(int $id): bool {
-            return $this->updateViaCriteria(["membership_status" => MembershipStatus::APPROVE->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::APPROVE)->value
+            ], ["ID" => $id]);
         }
 
         public function rejectMembership(int $id): bool {
-            return $this->updateViaCriteria(["membership_status" => MembershipStatus::REJECT->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::REJECT)->value
+            ], ["ID" => $id]);
         }
 
         public function pendingMembership(int $id): bool {
-            return $this->updateViaCriteria(["membership_status" => MembershipStatus::PENDING->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membersip_status" => (MembershipStatus::PENDING)->value
+            ], ["ID" => $id]);
         }
 
         public function membershipQuit(int $id): bool {
-            return $this->updateViaCriteria(["membership_status" => MembershipStatus::LEAVE->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::LEAVE)->value
+            ], ["ID" => $id]);
         }
 
         public function prohibitMembership(int $id): bool {
-            return $this->updateViaCriteria(["membership_status" => MembershipStatus::PROHIBIT->value], ["ID" => $id]);
+            return $this->updateViaCriteria([
+                "membership_status" => (MembershipStatus::PROHIBIT)->value
+            ], ["ID" => $id]);
         }
 
         public function promoteMembershipRole(int $id, RoleTitle $t): bool {
@@ -231,6 +243,52 @@
             
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return array_map(fn($row) => $this->hydrate($row), $rows);
+        }
+
+        public function getClubInformation(int $clubID): Club {
+            $club = ($this->clubRepo)->findByID($clubID);
+            return $club;
+        }
+
+        public function findAllMembershipsViaStatus(int $cID, MembershipStatus $s): array {
+            $rows = ($this->findViaCriteria(["club_ID" => $cID, "membership_status" => (string)$s->value]));
+
+            $data = array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
+            return $data;
+        }
+        
+        /* Only clubs that students were allowed or able to join successully */
+        public function getAllJoinedClubIDsViaStudentID(string $sID): array {
+            $rows = $this->findViaCriteria(
+                [
+                    "student_ID"        => $sID,
+                    "membership_status" => "active"
+                ]
+            );
+            $clubIDs = array_map(
+                fn ($row) => (int)$row["club_ID"], $rows
+            );
+            return $clubIDs;
+        }
+
+        public function getAll(): array {
+            $rows = $this->all();
+            return array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
+        }
+
+        public function getAllMembershipsInClubViaStatus(int $cID, MembershipStatus $s): array {
+            $rows = $this->findViaCriteria([
+                "club_ID"           => $cID,
+                "membership_status" => $s->value
+            ]);
+            if (empty($rows)) return [];
+            return array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
         }
     }
 ?>

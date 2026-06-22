@@ -2,141 +2,163 @@
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/membership.php";
     require_once root_dir . "/models/role.php";
+    require_once root_dir . "/models/student.php";
 
     class MembershipController extends BaseController {
         private MembershipRepository $membershipRepo;
         private RoleRepository $roleRepo;
+        private StudentRepository $studentRepo;
 
         public function __construct() {
             $this->membershipRepo = new MembershipRepository();
-            $this->roleRepo       = new RoleRepository();
+            $this->roleRepo = new RoleRepository();
+            $this->studentRepo = new StudentRepository();
         }
 
-        /**
-         * GET /club/members?club_ID=X
-         * Danh sách thành viên trong một câu lạc bộ
-         */
-        public function clubMembers(): void {
-            $this->requireAuth();
-            $clubID = $this->queryInt("club_ID");
-            if ($clubID < 1) {
-                $this->render("errors/400", ["message" => "Thiếu hoặc sai club ID!"]);
-                return;
-            }
-            $memberships = $this->membershipRepo->findAllMembersInAClub($clubID);
-            $this->render("membership/club_members", [
-                "clubID"      => $clubID,
-                "memberships" => $memberships
-            ]);
-        }
+        /*
+            GET /club/members?clubID=X
+            Get all memberships within a specific club 
+        */
+        // public function clubMembers(): void {
+        //     $clubID = (int)($_GET["club_ID"] ?? 0);
+        //     if ($clubID < 1) {
+        //         $this->render("errors/400", ["message" => "Invalid or missing club ID!"]);
+        //         return;
+        //     }
 
-        /**
-         * GET /student/memberships?student_ID=X
-         * Danh sách câu lạc bộ mà sinh viên đã tham gia
-         */
+        //     $memberships = ($this->membershipRepo)->findAllMembersInAClub($clubID);
+        //     $this->render("membership/club_members", [
+        //         "clubID" => $clubID,
+        //         "memberships" => $memberships
+        //     ]);
+        // }
+
+        /*
+            GET /student/membership?studentID=X 
+            Get all club membersip statuses for a single student
+        */
         public function studentMemberships(): void {
-            $this->requireAuth();
-            $studentID = (int)$this->getCurrentUserID();
-            $memberships = $this->membershipRepo->findAllMembershipFromAStudent($studentID);
+            $studentID = (int)($_GET["student_ID"] ?? 0);
+            if ($studentID < 1) {
+                $this->render("errors/400", ["message" => "Invalid or missing student ID!"]);
+                return;
+            }
+            
+            $memberships = ($this->membershipRepo)->findAllMembershipFromAStudent($studentID);
             $this->render("membership/all_from_student", [
-                "studentID"   => $studentID,
+                "studentID" => $studentID,
                 "memberships" => $memberships
             ]);
         }
 
-        /**
-         * POST /membership/apply
-         * Sinh viên gửi đơn xin gia nhập CLB (lấy studentID từ session)
-         */
-        public function apply(): void {
-            $this->requireAuth();
+        /*
+            POST /membership/join
+            Processes a student's application to join a club 
+        */
+        public function join(): void {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                $this->redirect(BASE_URL . "/clubs");
-                return;
+                header('Location: /clubs');
+                exit;
             }
-
-            // Lấy studentID từ session — không trust POST data
-            $studentID = (int)$this->getCurrentUserID();
-            $clubID    = $this->postInt("club_ID");
-
-            if ($clubID < 1) {
-                $this->render("errors/400", ["message" => "Thiếu hoặc sai club ID!"]);
-                return;
-            }
-
-            // Kiểm tra đã là thành viên chưa
-            $existing = $this->membershipRepo->findMembership($studentID, $clubID);
-            if ($existing !== null) {
-                $this->redirect(BASE_URL . "/clubs?msg=already_member");
-                return;
-            }
-
-            $role   = $this->roleRepo->create(RoleTitle::MEMBER, RolePermission::REGULAR);
+            $studentID = (int)($_POST["student_ID"] ?? 0);
+            $clubID = (int)($_POST["club_ID"] ?? 0);
+            // All students whom register in the club will initially be member by default
+            // They can be promoted later by the club administrator
+            $role = ($this->roleRepo)->create(RoleTitle::MEMBER, RolePermission::REGULAR);
             $roleID = $role->getID();
 
             try {
-                $this->membershipRepo->createJoinRequest($studentID, $clubID, $roleID);
-                $this->redirect(BASE_URL . "/clubs?msg=applied_successfully");
+                $membership = ($this->membershipRepo)->createJoinRequest($studentID, $clubID, $roleID);
+
+                header("Location: /clubs/view?ID={$clubID}&msg=applied_successfully");
             } catch (RuntimeException $ex) {
-                $this->render("clubs/index", [
-                    "error"  => $ex->getMessage(),
+                $this->render("clubs/view", [
+                    "error" => $ex->getMessage(),
                     "clubID" => $clubID
                 ]);
             }
         }
 
-        /**
-         * POST /membership/join
-         * Alias của apply() — xử lý logic giống nhau
-         */
-        public function join(): void {
-            $this->apply();
-        }
-
-        /**
-         * POST /membership/update
-         * Cập nhật trạng thái thành viên (approve/reject/ban/leave/pending)
-         */
+        /*
+            POST /membership/update-status 
+        */
         public function updateStatus(): void {
-            $this->requireAuth();
             if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-                $this->redirect("/");
-                return;
+                header("Location: /");
+                exit;
             }
 
-            $membershipID = $this->postInt("membershipID");
-            $action       = $this->post("action");
+            $membershipID = (int)($_POST["membershipID"] ?? 0);
+            $action = trim($_POST["action"] ?? "");
 
             if ($membershipID < 1) {
-                $this->render("errors/400", ["message" => "Thiếu ID membership!"]);
+                $this->render("errors/400", ["message" => "Missing membership record identifier!"]);
                 return;
             }
 
-            $isSuccess = match ($action) {
-                "approve"           => $this->membershipRepo->approveMembership($membershipID),
-                "reject"            => $this->membershipRepo->rejectMembership($membershipID),
-                "leave", "quit"     => $this->membershipRepo->membershipQuit($membershipID),
-                "prohibit", "ban"   => $this->membershipRepo->prohibitMembership($membershipID),
-                "pending"           => $this->membershipRepo->pendingMembership($membershipID),
-                default             => null
-            };
+            $isSuccess = false;
 
-            if ($isSuccess === null) {
-                $this->render("errors/400", ["message" => "Hành động không được hỗ trợ: {$action}"]);
-                return;
+            switch ($action) {
+                case "approve":
+                    $isSuccess = ($this->membershipRepo)->approveMembership($membershipID);
+                    break;
+                case "reject":
+                    $isSuccess = ($this->membershipRepo)->rejectMembership($membershipID);
+                    break;
+                case "leave":
+                case "quit":
+                    $isSuccess = ($this->membershipRepo)->membershipQuit($membershipID);
+                    break;
+                case "prohibit":
+                case "ban":
+                    $isSuccess = ($this->membershipRepo)->prohibitMembership($membershipID);
+                    break;
+                case "pending":
+                    $isSuccess = ($this->membershipRepo)->pendingMembership($membershipID);
+                    break;
+                default:
+                    $this->render("errors/400", ["message" => "Unsupported membership update!"]);
+                    return;
             }
 
             if ($isSuccess) {
-                $fallbackURL = $_SERVER["HTTP_REFERER"] ?? BASE_URL . "/clubs";
-                if (!str_starts_with($fallbackURL, BASE_URL)) {
-                    $fallbackURL = BASE_URL . "/clubs";
-                }
-                $this->redirect($fallbackURL);
+                // Returning back to the previous screen (dashboard or profile view)
+                $fallbackURL = $_SERVER["HTTP_REFERER"] ?? "/clubs";
+                header("Location: " . $fallbackURL);
+                exit;
             } else {
-                $this->render("errors/500", [
-                    "message" => "Cập nhật trạng thái thất bại!"
-                ]);
+                $this->render("errors/500", ["message" => "Database execution failed while applying status update!"]);
             }
+        }
+
+        public function getMembersJson(): void {
+            header("Content-type: application/json");
+            $clubID = (int)($_GET["club_ID"] ?? 0);
+
+            if ($clubID < 1) {
+                echo json_encode(["error" => "Invalid or missing club ID!"]);
+                return;
+            }
+
+            try {
+                $memberships = ($this->membershipRepo)->findAllMembershipsViaStatus($clubID, MembershipStatus::APPROVE);
+                $results = [];
+                foreach ($memberships as $m) {
+                    $studentID = $m->getStudentID();
+                    $student = ($this->studentRepo)->findByID($studentID);
+                    $role = ($this->roleRepo)->findByID($m->getRoleID());
+                    $results[] = [
+                        "studentID" => $studentID,
+                        "firstname" => $student->getFirstname(),
+                        "lastname"  => $student->getLastname(),
+                        "role"      => ($role->getTitle())->value
+                    ];
+                }
+                echo json_encode(["members" => $results]);
+            } catch (Exception $ex) {
+                echo json_encode(["error" => $ex->getMessage()]);
+            }
+            exit;
         }
     }
 ?>

@@ -3,13 +3,13 @@
     require_once root_dir . "/config/database-config.php";
 
     class Announcement {
-        private ?int $ID = null;
+        private ?int $ID;
         private int $authorID;
         private int $clubID;
         private string $title;
         private string $description;
 
-        public function __construct(?int $id, int $aID, int $cID, string $t, string $d) {
+        public function __construct(int $aID, int $cID, string $t, string $d, ?int $id = null) {
             $this->setAuthorID($aID);
             $this->setClubID($cID);
             $this->setTitle($t);
@@ -17,13 +17,8 @@
             $this->assignID($id);
         }
 
-        private function assignID(?int $id): void {
-            if ($id !== null) {
-                if (isset($this->ID) && $this->ID !== null) {
-                    throw new LogicException("ID already assigned!");
-                }
-                $this->ID = $id;
-            }
+        private function assignID(?int $id = null): void {
+            $this->ID = $id;
         }
 
         private function setAuthorID(int $id): void {

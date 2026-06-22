@@ -18,15 +18,15 @@
         private int $enrolledYear;
 
         private array $availableMajors = [
-        // Major -> Class code
-        "informatics and computer engineering" => "ICE",
-        "business and data analysis" => "BDA",
-        "management information system" => "MIS",
-        "accounting, analyzing and auditing" => "AC",
-        "automation and informatics" => "AAI",
-        "english language" => "EL",
-        "digital business" => "DB",
-        "digital communication" => "DC"
+            // Major -> Class code
+            "informatics and computer engineering" => "ICE",
+            "business and data analysis" => "BDA",
+            "management information system" => "MIS",
+            "accounting, analyzing and auditing" => "AC",
+            "automation and informatics" => "AAI",
+            "english language" => "EL",
+            "digital business" => "DB",
+            "digital communication" => "DC"
         ];
 
         public function __construct(string $sID, string $m, DegreeType $dtype, ?int $ID = null) {
@@ -91,7 +91,13 @@
         public function getStudentID(): string {return $this->studentID;}
         public function getDegree(): DegreeType {return $this->degree;}
         public function getClass(): string {return $this->class;}
+
         // public function getEnrolledYear(): int {return $this->enrolledYear;}
+        public function getMajorAbbreviation(): string {
+            $major = $this->getMajor();
+            $abbreviation = $this->availableMajors[$major];
+            return $abbreviation;
+        }
     }
 
 
@@ -117,6 +123,14 @@
             $data = $this->findViaCriteria(["ID" => $id]);
             if (empty($data)) return false;
             return true;
+        }
+
+        public function findByStudentID(string $sID): ?Profile {
+            $data = $this->findViaCriteria(["student_ID" => $sID]);
+            if (empty($data)) return null;
+
+            $row = $data[0];
+            return $this->hydrate($row);
         }
 
         public function linkToStudentViaID(string $sID, string $pID): bool {
@@ -169,6 +183,19 @@
                 (string)$row["major"],
                 DegreeType::from((string)$row["degree"]),
                 (int)$row["ID"]
+            );
+        }
+
+        public function filterByMajor(string $major, string $currUserID): array {
+            $data = $this->findViaCriteriaExceptFor(
+                [
+                    "major" => $major
+                ], 
+                [
+                    "student_ID"    => $currUserID
+                ]);
+            return array_map(
+                fn ($row) => $this->hydrate($row), $data
             );
         }
     }

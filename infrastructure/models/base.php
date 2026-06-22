@@ -6,277 +6,228 @@
         protected PDO $dbConnection;
 
         public function __construct(string $table_name) {
-            $this->dbConnection = DatabaseConfig::getInstance()->getConnection();
-            $this->tableName    = $table_name;
+            $this->dbConnection = (DatabaseConfig::getInstance()->getConnection());
+            $this->tableName = $table_name;
         }
 
-        // ────────────────────────────────────────────────
-        // READ
-        // ────────────────────────────────────────────────
-
-        /** Lấy toàn bộ bản ghi của bảng */
         public function all(): array {
             try {
-                $stmt = $this->dbConnection->prepare("SELECT * FROM `{$this->tableName}`");
-                $stmt->execute();
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $query = "select * from {$this->tableName}";
+                $stmt = ($this->dbConnection)->prepare($query);
+                $stmt->execute([]);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $data;
             } catch (PDOException $ex) {
-                error_log("[BaseRepository::all] " . $ex->getMessage());
+                error_log($ex->getMessage());
                 throw $ex;
             }
         }
 
-        /** Tìm nhiều bản ghi theo điều kiện AND */
-        public function findViaCriteria(array $criteria): array {
-            try {
-                if (empty($criteria)) {
-                    throw new InvalidArgumentException("Criteria cannot be empty in findViaCriteria");
-                }
-                $keys   = array_keys($criteria);
-                $vals   = array_values($criteria);
-                $where  = implode(" AND ", array_map(fn($k) => "`{$k}` = :{$k}", $keys));
-                $params = [];
-                $len = count($keys);
-                for ($i = 0; $i < $len; $i++) {
-                    $params[":{$keys[$i]}"] = $vals[$i];
-                }
-                $stmt = $this->dbConnection->prepare(
-                    "SELECT * FROM `{$this->tableName}` WHERE {$where}"
-                );
-                $stmt->execute($params);
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } catch (PDOException $ex) {
-                error_log("[BaseRepository::findViaCriteria] " . $ex->getMessage());
-                throw $ex;
-            }
-        }
-
-        /** Tìm đúng 1 bản ghi theo điều kiện — trả null nếu không có */
-        public function findOne(array $criteria): ?array {
-            $data = $this->findViaCriteria($criteria);
-            return empty($data) ? null : $data[0];
-        }
-
-        /** Lấy các cột cụ thể của toàn bảng */
-        public function getAllFromColumn(array $cols): array {
-            try {
-                // Tên cột không thể bind bằng prepared statement — dùng whitelist
-                $safeCols = [];
-                foreach ($cols as $col) {
-                    if (preg_match('/^[a-zA-Z0-9_]+$/', $col)) {
-                        $safeCols[] = "`{$col}`";
-                    } else {
-                        throw new InvalidArgumentException("Invalid column name: " . htmlspecialchars($col));
-                    }
-                }
-                $selectCols = implode(', ', $safeCols);
-                $stmt = $this->dbConnection->prepare(
-                    "SELECT {$selectCols} FROM `{$this->tableName}`"
-                );
-                $stmt->execute();
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } catch (PDOException $ex) {
-                error_log("[BaseRepository::getAllFromColumn] " . $ex->getMessage());
-                throw $ex;
-            }
-        }
-
-        // ────────────────────────────────────────────────
-        // COUNT / EXISTS
-        // ────────────────────────────────────────────────
-
-        /** Đếm số bản ghi — dùng COUNT thay vì fetch toàn bộ rows */
-        public function count(array $criteria = []): int {
-            try {
-                if (empty($criteria)) {
-                    $stmt = $this->dbConnection->prepare(
-                        "SELECT COUNT(*) AS total FROM `{$this->tableName}`"
-                    );
-                    $stmt->execute();
-                } else {
-                    $keys   = array_keys($criteria);
-                    $vals   = array_values($criteria);
-                    $where  = implode(" AND ", array_map(fn($k) => "`{$k}` = :{$k}", $keys));
-                    $params = [];
-                    $len = count($keys);
-                    for ($i = 0; $i < $len; $i++) {
-                        $params[":{$keys[$i]}"] = $vals[$i];
-                    }
-                    $stmt = $this->dbConnection->prepare(
-                        "SELECT COUNT(*) AS total FROM `{$this->tableName}` WHERE {$where}"
-                    );
-                    $stmt->execute($params);
-                }
-                $row = $stmt->fetch(PDO::FETCH_ASSOC);
-                return (int)$row["total"];
-            } catch (PDOException $ex) {
-                error_log("[BaseRepository::count] " . $ex->getMessage());
-                throw $ex;
-            }
-        }
-
-        /** Kiểm tra bản ghi tồn tại theo điều kiện */
-        public function exists(array $criteria): bool {
-            return $this->count($criteria) > 0;
-        }
-
-        /** Kiểm tra bản ghi tồn tại theo ID (auto-increment) */
-        public function isExist(int $id): bool {
-            return $this->count(["ID" => $id]) > 0;
-        }
-
-        // ────────────────────────────────────────────────
-        // WRITE
-        // ────────────────────────────────────────────────
-
-        /** Thêm bản ghi mới */
         public function add(array $data): bool {
             try {
-                if (empty($data)) {
-                    throw new InvalidArgumentException("Data cannot be empty in add");
-                }
-                $cols        = array_keys($data);
-                $vals        = array_values($data);
-                $insertedCols = implode(", ", array_map(fn($c) => "`{$c}`", $cols));
-                $bindParams  = implode(", ", array_map(fn($c) => ":{$c}", $cols));
+                $cols = array_keys($data);
+                $vals = array_values($data);
+                $insertedCols = implode(" , ", array_map(function ($col) {return "{$col}";}, $cols));
+                $bindParams = implode(" , ", array_map(function ($col) {return ":{$col}";}, $cols));
+                $query = "
+                    insert into {$this->tableName} ({$insertedCols})
+                    values ({$bindParams})
+                ";
                 $params = [];
-                $len = count($cols);
-                for ($i = 0; $i < $len; $i++) {
+                for ($i = 0; $i < count($cols); $i++) {
                     $params[":{$cols[$i]}"] = $vals[$i];
                 }
-                $stmt = $this->dbConnection->prepare(
-                    "INSERT INTO `{$this->tableName}` ({$insertedCols}) VALUES ({$bindParams})"
-                );
-                return $stmt->execute($params);
+                $stmt = ($this->dbConnection)->prepare($query);
+                $isSuccess = $stmt->execute($params);
+                return $isSuccess;
             } catch (PDOException $ex) {
-                error_log("[BaseRepository::add] " . $ex->getMessage());
+                error_log($ex->getMessage());
                 throw $ex;
             }
-        }
+        } 
 
-        /** Cập nhật bản ghi theo điều kiện */
-        public function updateViaCriteria(array $updatedData, array $criteria): bool {
+        public function findViaCriteria(array $criteria): array {
             try {
-                if (empty($updatedData) || empty($criteria)) {
-                    throw new InvalidArgumentException("Data and criteria cannot be empty in updateViaCriteria");
-                }
-                $newDataKeys = array_keys($updatedData);
-                $newDataVals = array_values($updatedData);
-                $whereKeys   = array_keys($criteria);
-                $whereVals   = array_values($criteria);
-
-                $setStmt = implode(", ", array_map(fn($k) => "`{$k}` = :set_{$k}", $newDataKeys));
-                $where   = implode(" AND ", array_map(fn($k) => "`{$k}` = :wh_{$k}", $whereKeys));
-
-                // Dùng prefix set_ / wh_ để tránh xung đột key khi cùng tên cột
+                $keys = array_keys($criteria);
+                $vals = array_values($criteria);
+                $where = implode(" and ", array_map(function ($key) {return "{$key} = :{$key}";}, $keys));
                 $params = [];
-                $newDataLen = count($newDataKeys);
-                for ($j = 0; $j < $newDataLen; $j++) {
-                    $params[":set_{$newDataKeys[$j]}"] = $newDataVals[$j];
+                for ($i = 0; $i < count($keys); $i++) {
+                    $params[":{$keys[$i]}"] = $vals[$i]; 
                 }
-                $whereLen = count($whereKeys);
-                for ($i = 0; $i < $whereLen; $i++) {
-                    $params[":wh_{$whereKeys[$i]}"] = $whereVals[$i];
-                }
-
-                $stmt = $this->dbConnection->prepare(
-                    "UPDATE `{$this->tableName}` SET {$setStmt} WHERE {$where}"
-                );
-                return $stmt->execute($params);
+                $query = "
+                    select
+                        * 
+                    from {$this->tableName}
+                    where {$where}";
+                $stmt = ($this->dbConnection)->prepare($query);
+                $stmt->execute($params);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $data;
             } catch (PDOException $ex) {
-                error_log("[BaseRepository::updateViaCriteria] " . $ex->getMessage());
+                error_log($ex->getMessage());
                 throw $ex;
             }
         }
 
-        /** Xóa bản ghi theo điều kiện */
         public function deleteViaCriteria(array $criteria): bool {
             try {
-                if (empty($criteria)) {
-                    throw new InvalidArgumentException("Criteria cannot be empty in deleteViaCriteria");
-                }
-                $keys   = array_keys($criteria);
-                $vals   = array_values($criteria);
-                $where  = implode(" AND ", array_map(fn($k) => "`{$k}` = :{$k}", $keys));
+                $keys = array_keys($criteria);
+                $vals = array_values($criteria);
+                $where = implode(" and ", array_map(function ($key) {return "{$key} = :{$key}";}, $keys));
+                $query = "
+                    delete from {$this->tableName}
+                    where {$where}
+                ";
+                $stmt = ($this->dbConnection)->prepare($query);
                 $params = [];
-                $len = count($keys);
-                for ($i = 0; $i < $len; $i++) {
+                for ($i = 0; $i < count($keys); $i++) {
                     $params[":{$keys[$i]}"] = $vals[$i];
                 }
-                $stmt = $this->dbConnection->prepare(
-                    "DELETE FROM `{$this->tableName}` WHERE {$where}"
-                );
-                return $stmt->execute($params);
+                $isSuccess = $stmt->execute($params);
+                if ($isSuccess) {echo "<div>Deleted product successfully</div>";return true;}
+                echo "<div>Failed to erase product!</div>";
+                return false;
+
             } catch (PDOException $ex) {
-                error_log("[BaseRepository::deleteViaCriteria] " . $ex->getMessage());
+                error_log($ex->getMessage());
                 throw $ex;
             }
         }
 
-        // ────────────────────────────────────────────────
-        // TRANSACTION
-        // ────────────────────────────────────────────────
-
-        /** Bắt đầu transaction — dùng khi cần nhiều thao tác DB là một khối nguyên tử */
-        public function beginTransaction(): void {
-            $this->dbConnection->beginTransaction();
-        }
-
-        public function commit(): void {
-            $this->dbConnection->commit();
-        }
-
-        public function rollback(): void {
-            $this->dbConnection->rollBack();
-        }
-
-        // ────────────────────────────────────────────────
-        // HELPERS
-        // ────────────────────────────────────────────────
-
-        public function getLatestID(): int {
-            return (int)$this->dbConnection->lastInsertId();
+        public function updateViaCriteria(array $updatedData, array $critera): bool {
+            try {
+                $newDataKeys = array_keys($updatedData);
+                $newDataVals = array_values($updatedData);
+                $keys = array_keys($critera);
+                $vals = array_values($critera);
+                $where = implode(" and ", array_map(function ($key) {return "{$key} = :{$key}";}, $keys));
+                $setStmt = implode(" , ", array_map(function ($key) {return "{$key} = :{$key}";}, $newDataKeys));
+                $query = "
+                    update {$this->tableName}
+                    set {$setStmt}
+                    where {$where}";
+                // echo "<div>{$query}</div>";
+                $params = [];
+                for ($i = 0; $i < count($keys); $i++) {
+                    $params[":{$keys[$i]}"] = $vals[$i];
+                }
+                for ($j = 0; $j < count($newDataKeys); $j++) {
+                    $params[":{$newDataKeys[$j]}"] = $newDataVals[$j];
+                }
+                // echo "<div>{$query}</div>";
+                $stmt = ($this->dbConnection)->prepare($query);
+                $isSuccess = $stmt->execute($params);
+                if (!$isSuccess) {
+                    return false;
+                }
+                return true;
+            } catch (PDOException $ex) {
+                error_log($ex->getMessage());
+                throw $ex;
+            }
         }
 
         public function getTableName(): string {
             return $this->tableName;
         }
 
-        /** Subclass bắt buộc implement để map DB row → Entity object */
+        public function setTableName(string $name): void {
+            $this->tableName = $name;
+        }
+
+        public function getLatestID(): int {
+            $id = $this->dbConnection->lastInsertId();
+            return $id;
+        }
+
+        public function getAllFromColumn(array $cols): array {
+            $bindCols = implode(' , ', array_map(function ($x) {return ":{$x}";}, $cols));
+            $query = "select {$bindCols} from {$this->tableName}";
+            $params = [];
+            for ($i = 0; $i < count($cols); $i++) {
+                $params[":{$cols[$i]}"] = $cols[$i];
+            }
+            $stmt = ($this->dbConnection)->prepare($query);
+            $stmt->execute($params);
+            $all = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $all;
+        }
+
         abstract protected function hydrate(array $row): object;
+
+        public function isExist(int $id): bool {
+            $params = ["ID" => $id];
+            $key = array_keys($params);
+            $bindKey = ":{$key[0]}";
+            $bindParams = [$bindKey => $id];
+            $query = "select * from {$this->tableName} where {$key[0]} = {$bindKey}";
+            $stmt = ($this->dbConnection)->prepare($query);
+            $stmt->execute($bindParams);
+            $all = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return count($all) > 0 ? true : false;
+        }
+
+        public function findViaCriteriaExceptFor(array $criteria, array $exceptCriteria): array {
+            try {
+                $cols = array_keys($criteria);
+                $vals = array_values($criteria);
+                $exceptCols = array_keys($exceptCriteria);
+                $exceptVals = array_values($exceptCriteria); 
+                $where = implode(" , ", array_map(function ($key) {return "{$key} = :{$key}";}, $cols));
+                $exceptWhere = implode(" , ", array_map(function ($key) {return "{$key} != :{$key}";}, $exceptCols));
+
+                $params = [];
+                for ($i = 0; $i < count($cols); $i++) {
+                    $params[":{$cols[$i]}"] = $vals[$i];
+                }
+                for ($j = 0; $j < count($exceptCols); $j++) {
+                    $params[":{$exceptCols[$j]}"] = $exceptVals[$j];
+                }
+
+                $query = "
+                    select
+                        *
+                    from {$this->tableName}
+                    where {$where}
+                    and {$exceptWhere}
+                ";
+                $stmt = ($this->dbConnection)->prepare($query);
+                $stmt->execute($params);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $data;
+            } catch (PDOException $ex) {
+                error_log($ex->getMessage());
+                throw $ex;
+            }
+        }
     }
 
-    // ────────────────────────────────────────────────────────────
-    // BaseModel — validation helpers dùng chung cho Entity classes
-    // ────────────────────────────────────────────────────────────
     abstract class BaseModel {
-
-        /** Kiểm tra chuỗi có chứa ký tự đặc biệt không (hỗ trợ UTF-8/tiếng Việt) */
         public function doesContainSpecialChars(string $str): bool {
-            // \p{L}: chữ cái bất kỳ ngôn ngữ | \p{N}: số | \s: khoảng trắng
-            return (bool)preg_match("/[^\p{L}\p{N}\s]/u", $str);
+            // \p{L}: Khớp với bất kỳ chữ cái nào từ bất kỳ ngôn ngữ nào (có dấu hoặc không)
+            // \p{N}: Khớp với bất kỳ con số nào
+            // \s: Khớp với khoảng trắng (dấu cách, tab, xuống dòng)
+            // Modifier /u: Bắt buộc phải có để PHP hiểu chuỗi theo chuẩn UTF-8
+            if (preg_match("/[^\p{L}\p{N}\s]/u", $str)) return true;
+            return false;
         }
 
-        /** Kiểm tra chuỗi có chứa chữ số không */
-        public function doesContainNumber(string $str): bool {
-            return (bool)preg_match("/\d/", $str);
-        }
-
-        /** Kiểm tra chuỗi có chứa chữ cái không */
         public function doesContainLetter(string $str): bool {
-            return (bool)preg_match("/[a-zA-Z]/", $str);
+            return false;
         }
 
-        /** Validate ID dạng auto-increment (phải > 0) */
+        public function doesContainNumber(string $str): bool {
+            return false;
+        }
+
         public function validateIDForAutoIncrement(int $x): bool {
-            return $x > 0;
+            return $x > 0 ? true : false; 
         }
 
-        /** Set ID có validate — dùng cho các entity có auto-increment PK */
-        public function setIDForAutoIncrementType(&$x, int $y): void {
-            if (!$this->validateIDForAutoIncrement($y)) {
-                throw new InvalidArgumentException("Invalid ID: must be greater than 0!");
-            }
+        public function setIDForAutoIncrementType(int &$x, int $y): void {
+            $isOk = $this->validateIDForAutoIncrement($y);
+            if (!$isOk) throw new InvalidArgumentException("Invalid ID!");
             $x = $y;
         }
     }

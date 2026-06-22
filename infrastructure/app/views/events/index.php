@@ -1,95 +1,132 @@
-<?php define("ASSET_URL", BASE_URL . "/public"); $activeLink = "events"; ?>
+<?php 
+    define("ASSET_URL", base_folder_path . "/public"); 
+    $activePage = 'events'; 
+
+    if (!isset($userJoinedClubIDs)) {
+        $userJoinedClubIDs = [];
+    }
+
+    if (!isset($searchQuery)) {
+        $searchQuery = "";
+    }
+
+    if (!isset($studentID)) {
+        $studentID = null;
+    }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Browse upcoming student events — Club&Event Seeker">
-    <title>Events — Club&amp;Event Seeker</title>
-    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/ClubPage.css">
+    <title>Event Exploerer</title>
+    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/ClubPage.css" />
+    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/global.css" />
     <style>
-        .status-open    { background:#dcfce7;color:#15803d; }
-        .status-pending { background:#fef9c3;color:#a16207; }
-        .status-closed  { background:#fee2e2;color:#b91c1c; }
-        .status-void    { background:#f1f5f9;color:#64748b; }
-        .status-badge { display:inline-block;padding:0.2rem 0.65rem;border-radius:99px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em; }
-        .event-date { font-size:0.85rem;color:var(--text-muted);margin-bottom:0.4rem; }
-        .empty-state { text-align:center;padding:5rem 0;color:var(--text-muted); }
+        body { font-family: system-ui, sans-serif; background-color: #f8fafc; margin: 0; }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 30px; max-width: 410px;}
+        .search-input { flex: 1; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+        .btn-search { background-color: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .event-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .event-title { margin: 0 0 10px 0; color: #1e293b; font-size: 1.25rem; }
+        .event-meta { color: #64748b; font-size: 0.9rem; margin-bottom: 15px; }
+        .badge-private { background-color: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .btn-join { margin-top: auto; text-align: center; background-color: #10b981; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: block; }
+        .btn-join.disabled { background-color: #cbd5e1; cursor: not-allowed; }
     </style>
 </head>
 <body>
-<?php require_once root_dir . "/app/views/layouts/navbar.php"; ?>
 
-<div class="container">
-    <div class="header-section">
-        <h1 class="page-title">📅 Upcoming Events</h1>
-        <input type="text" id="event-search" class="search-bar" placeholder="Search events by name...">
+    <?php require root_dir . "/app/views/partials/navbar.php"; ?>
+
+    <div class="container">
+        <h1 style="color: #1e293b; margin-bottom: 20px;">Upcoming Events</h1>
+
+        <form method="GET" action="<?= base_folder_path ?>/events" class="search-bar">
+            <input type="text" name="search" class="search-input" placeholder="Search events by name..." value="<?= htmlspecialchars($searchQuery) ?>">
+            <div class="" style="display: flex; justify-content: center; align-items: space-between;">
+                <button type="submit" class="btn-search" style="margin-right: 0.5rem;">Search</button>
+                <?php if(!empty($searchQuery)): ?>
+                    <button type="button" class="btn">
+                        <a href="<?= base_folder_path ?>/events" style="align-self: center; color: #ef4444; text-decoration: none; font-weight: 500;">Clear</a>
+                    </button>
+                <?php endif; ?>
+            </div> 
+        </form>
+
+        <div class="events-grid">
+            <?php if (empty($events)): ?>
+                <p>No events found.</p>
+            <?php else: ?>
+                <?php foreach ($events as $component): ?>
+                    <?php 
+                        // --- CORE PRIVACY LOGIC ---
+                        $event = $component[0];
+                        $wasRegistered = $component[1];
+                        $isPrivate = $event->getPrivacyMode() ?? false;
+                        $clubID = $event->getClubID();
+                        $isMember = in_array($clubID, $userJoinedClubIDs);
+                        $isFull = $event->getCurrParticipants() >= $event->getMaxParticipants();
+
+                        // If the event is private and the logged-in user is NOT a member, skip rendering it entirely
+                        if ($isPrivate && !$isMember) {
+                            continue; 
+                        }
+                    ?>
+                    
+                    <div class="event-card">
+                        <?php if ($isPrivate): ?>
+                            <div><span class="badge-private">🔒 Private (Members Only)</span></div>
+                        <?php endif; ?>
+                        
+                        <h3 class="event-title"><?= htmlspecialchars($event->getTitle()) ?></h3>
+                        
+                        <div class="event-meta">
+                            <div>📅 <?= $event->getEventDate()->format('F j, Y') ?></div>
+                            <div>⏰ <?= $event->getStartTime()->format('g:i A') ?> - <?= $event->getEndTime()->format('g:i A') ?></div>
+                            <div>👥 <?= $event->getCurrParticipants() ?> / <?= $event->getMaxParticipants() ?> Joined</div>
+                        </div>
+                        
+                        <p style="color: #475569; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.5;">
+                            <?= htmlspecialchars(substr($event->getDescription(), 0, 100)) ?>...
+                        </p>
+
+                        <?php if ($studentID): ?>
+                            <?php if ($event->getCurrParticipants() >= $event->getMaxParticipants()): ?>
+                                <button class="btn-join disabled" disabled>Event Full</button>
+                            <?php else: ?>
+                                <form action="<?= base_folder_path ?>/events/register" method=\"POST\" style="margin-top: auto;">
+                                    <input type="hidden" name="event_ID" value="<?= $event->getID() ?>">
+                                    <input type="hidden" name="student_ID" value="<?= $studentID ?>">
+                                    
+                                    <?php if ($wasRegistered): ?>
+                                        <button type="button" class="btn-join"
+                                        style="width: 100%; border: none; cursor: pointer;">Registered</button>
+                                    <?php elseif ($isFull): ?>
+                                        <button type="button" style="width: 100%; background-color: #ef4444; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed; opacity: 0.7;" disabled>
+                                            🚫 Filled (Max Exceeded)
+                                        </button>
+                                    <?php elseif (($event->getStatus())->value !== "open"): ?>
+                                        <button type="button" style="width: 100%; background-color: #6b7280; color: white; padding: 10px; border: none; border-radius: 6px; cursor: not-allowed;" disabled>
+                                            Registration Closed
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="submit" class="btn-join" style="width: 100%; border: none; cursor: pointer;">Register Now</button>
+                                    <?php endif ?>
+                                </form>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <a href="<?= base_folder_path ?>/login" class="btn-join" style="background-color: #64748b;">Log in to Join</a>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
-    <?php if (isset($error)): ?>
-        <div style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:0.75rem 1rem;margin-bottom:1.5rem;">
-            <?= htmlspecialchars($error) ?>
-        </div>
-    <?php endif; ?>
-
-    <?php $events = $events ?? []; ?>
-
-    <?php if (empty($events)): ?>
-        <div class="empty-state">
-            <p style="font-size:3rem;">🗓️</p>
-            <h2 style="margin:0.5rem 0;">No Events Yet</h2>
-            <p>Check back later for upcoming club events.</p>
-        </div>
-    <?php else: ?>
-        <div class="grid" id="event-list">
-            <?php foreach ($events as $row): ?>
-            <?php
-                // $row là array thô từ DB vì EventRepository::all() chưa hydrate
-                $title       = htmlspecialchars($row["title"] ?? "Untitled Event");
-                $description = htmlspecialchars($row["description"] ?? "");
-                $status      = $row["status"] ?? "pending";
-                $eventDate   = $row["event_date"] ? date("M d, Y", strtotime($row["event_date"])) : "TBD";
-                $eventID     = (int)($row["ID"] ?? 0);
-                $maxP        = (int)($row["max_participants"] ?? 0);
-                $statusClass = "status-" . $status;
-            ?>
-            <div class="card" data-event-title="<?= strtolower($title) ?>">
-                <div>
-                    <div class="card-header">
-                        <h3 class="card-title"><?= $title ?></h3>
-                        <span class="status-badge <?= $statusClass ?>"><?= $status ?></span>
-                    </div>
-                    <p class="event-date">📅 <?= $eventDate ?></p>
-                    <p class="text-muted"><?= $description ?></p>
-                </div>
-                <div>
-                    <div class="card-meta">👥 Max Participants: <strong><?= $maxP ?: "Unlimited" ?></strong></div>
-                    <?php if (isset($_SESSION["user_ID"]) && $status === "open"): ?>
-                        <form action="<?= BASE_URL ?>/events/register" method="POST">
-                            <input type="hidden" name="event_ID" value="<?= $eventID ?>">
-                            <button type="submit" class="btn btn-primary">Register</button>
-                        </form>
-                    <?php elseif ($status !== "open"): ?>
-                        <button class="btn" style="background:#f1f5f9;color:var(--text-muted);cursor:not-allowed;" disabled>
-                            <?= $status === "closed" ? "Registration Closed" : ucfirst($status) ?>
-                        </button>
-                    <?php else: ?>
-                        <a href="<?= BASE_URL ?>/login" class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;">Log in to Register</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-</div>
-
-<script>
-document.getElementById("event-search")?.addEventListener("input", function () {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll(".card[data-event-title]").forEach(card => {
-        card.style.display = card.dataset.eventTitle.includes(q) ? "" : "none";
-    });
-});
-</script>
 </body>
 </html>
+>>>>>>> master

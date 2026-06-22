@@ -21,41 +21,20 @@
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-    // Security headers
-    header("X-Frame-Options: SAMEORIGIN");
-    header("X-XSS-Protection: 1; mode=block");
-    header("X-Content-Type-Options: nosniff");
-    header("Referrer-Policy: strict-origin-when-cross-origin");
-    header("Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://fonts.gstatic.com https://api.dicebear.com; img-src 'self' data: https://api.dicebear.com;");
-
-    // Rate Limiting (Basic)
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $rateLimitKey = 'rate_limit_' . $ip;
-    if (!isset($_SESSION[$rateLimitKey])) {
-        $_SESSION[$rateLimitKey] = ['count' => 1, 'time' => time()];
-    } else {
-        $elapsed = time() - $_SESSION[$rateLimitKey]['time'];
-        if ($elapsed < 60) {
-            $_SESSION[$rateLimitKey]['count']++;
-            if ($_SESSION[$rateLimitKey]['count'] > 100) { // 100 requests per minute
-                http_response_code(429);
-                exit("Too Many Requests. Please wait a minute.");
-            }
-        } else {
-            $_SESSION[$rateLimitKey] = ['count' => 1, 'time' => time()];
-        }
-    }
+    require_once root_dir . "/config/env-config.php";
 
     $requestURI = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
     $requestMethod = $_SERVER["REQUEST_METHOD"];
 
-    // Đọc tên folder từ .env thay vì hard-code
-    $folderName = getProjectFolderName();
-    $baseFolder = "/{$folderName}/infrastructure";
+    $envLoader = new EnvLoader(root_dir . "/config/.env");
+
+    $folderName = $envLoader->get("PROJECT_FOLDER_NAME");
+    $baseFolderPath = "/{$folderName}/infrastructure";
+    define("base_folder_path", $baseFolderPath);
 
     // Strip the base folder from the URI
-    if (str_starts_with($requestURI, $baseFolder)) {
-        $requestURI = substr($requestURI, strlen($baseFolder));
+    if (str_starts_with($requestURI, $baseFolderPath)) {
+        $requestURI = substr($requestURI, strlen($baseFolderPath));
     }
 
     // Strip "/public" in case the internal Apache redirect leaks it into the URI
@@ -68,6 +47,8 @@
         $requestURI = "/";
     }
 
+    // echo "<div>Current request URI: {$requestURI}</div>";
+
     // Route registry [Method][Path] -> [ControllerClass, ControllerAction]
     $routes = [
         "GET" => [
@@ -75,26 +56,50 @@
             "/clubs"                    => ["ClubController", "index"],
             "/clubs/create"             => ["ClubController", "showCreateForm"],
             "/club/members"             => ["MembershipController", "clubMembers"],
+            "/clubs/show"               => ["ClubController", "show"],
+            "/clubs/my-clubs"           => ["ClubController", "myClubs"],
+            "/clubs/admin-stats"        => ["ClubController", "adminStats"],
             "/events"                   => ["EventController", "index"],
+            "/events/comments"          => ["EventController", "getEventComments"],
             "/announcements"            => ["AnnouncementController", "index"],
             "/locations"                => ["LocationController", "index"],
             "/student/memberships"      => ["MembershipController", "studentMemberships"],
-            "/login"                    => ["StudentController", "showAuthPage"]
+            "/login"                    => ["StudentController", "showAuthPage"],
+            "/signout"                  => ["StudentController", "signout"],
+            "/profile"                  => ["StudentController", "showProfile"],
+            "/profile/view"             => ["StudentController", "showPublicProfile"],
+            "/admin/create/club"        => ["ClubController", "showCreateForm"],
+            "/memberships/all-members"  => ["MembershipController", "getMembersJson"],
+            "/feedbacks/chat-history"   => ["FeedbackController", "chatHistory"],
+            "/friends"                  => ["FriendshipController", "index"],
+            "/friends/search"           => ["FriendshipController", "searchFriend"],
+            "/friends/recommended-service-testing"  => ["FriendshipController", "friendRecommendedTestingAPI"]
         ],
 
         "POST" => [
             "/clubs/create"             => ["ClubController", "store"],
+            "/clubs/register"           => ["ClubController", "register"],
+            "/clubs/process-request"    => ["ClubController", "processJoiningRequest"],
+            "/clubs/member-kick"        => ["ClubController", "kickMember"],
             "/events/register"          => ["EventController", "registerForEvent"],
+            "/events/create"            => ["EventController", "store"],
+            "/events/comments"          => ["EventController", "postEventComment"],
             "/announcements/create"     => ["AnnouncementController", "store"],
             "/membership/apply"         => ["MembershipController", "apply"],
             "/membership/update"        => ["MembershipController", "updateStatus"],
             "/membership/join"          => ["MembershipController", "join"],
             "/attendance/checkin"       => ["AttendanceController", "checkIn"],
-            "/feedback/submit"          => ["FeedbackController", "store"],
             "/locations/create"         => ["LocationController", "store"],
             "/signout"                  => ["StudentController", "signout"],
             "/auth/login"               => ["StudentController", "login"],
-            "/auth/signup"              => ["StudentController", "register"]
+            "/auth/signup"              => ["StudentController", "register"],
+            "/admin/create/club"        => ["ClubController", "store"],
+            "/feedbacks/submit"         => ["FeedbackController", "store"],
+            "/friends/add"              => ["FriendshipController", "addFriend"],
+            "/friends/accept"           => ["FriendshipController", "acceptFriend"],
+            "/friends/decline"          => ["FriendshipController", "declineFriend"],
+            "/friends/unfriend"         => ["FriendshipController", "unfriend"],
+            "/friends/withdrawRequest"  => ["FriendshipController", "withdrawRequest"]
         ]
     ];
 
@@ -120,6 +125,7 @@
         $actionName = $target[1];
 
         $controllerFile = root_dir . "/app/controllers/{$controllerName}.php";
+        // echo "<div>Trying to find file at: {$controllerFile}</div>";
 
         if (file_exists($controllerFile)) {
             require_once $controllerFile;

@@ -27,12 +27,7 @@
         }
 
         private function setID(?int $id): void {
-            if ($id !== null) {
-                if ($id <= 0) {
-                    throw new InvalidArgumentException("Invalid ID: must be greater than 0!");
-                }
-                $this->ID = $id;
-            }
+            $this->ID = $id;
         }
         private function setTitle(RoleTitle $x): void {
             $this->roleTitle = $x;

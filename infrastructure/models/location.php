@@ -3,7 +3,7 @@
     require_once root_dir . "/models/base.php";
 
     class Location extends BaseModel {
-        private ?int $ID = null;
+        private ?int $ID;
         private string $building;
         private string $room;
         private int $attendanceCapacity;
@@ -16,9 +16,7 @@
         }
 
         private function setID(?int $id): void {
-            if ($id !== null) {
-                $this->ID = $id;
-            }
+            $this->ID = $id;
         }
 
         private function setBuilding(string $b): void {
@@ -42,6 +40,9 @@
         public function getBuilding(): string {return $this->building;}
         public function getRoom(): string {return $this->room;}
         public function getMaximumCapacity(): int {return $this->attendanceCapacity;}
+        public function getAddress(): string {
+            return "building: " . $this->getBuilding() . " - room: " . $this->getRoom();
+        }
     }
 
     class LocationRepository extends BaseRepository {
@@ -72,6 +73,7 @@
             if (!$isSuccess) throw new RuntimeException("Failed to create new location!");
 
             $generatedID = $this->getLatestID();
+            echo "<div>Latest ID in Location table: {$generatedID}</div>";
             return new Location(
                 $b, 
                 $r,

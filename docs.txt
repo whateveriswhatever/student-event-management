@@ -1,0 +1,11 @@
+Backend architecture follows Central Front Router with Server-side Rendering
+
+Frontend with vanila JS, HTML and CSS
+- If we use a modern framework like React, Vue, or Angular into a tradtional server-side MVC architecture 
+often introduces unnecessary friction and complexity. Sticking to the web's core languages keeps our project
+lightweight, fast, and remarkably clean.
+- Without having to install NodeJS, managing a package.json file, installing dependencies, and configuring building tools
+like Vite or Webpack. 
+- With vanila code, there is no compiling or transpiling. We save the code, refreshing the browser, and it runs natively and instantly.
+- Mordern JS frameworks ship with large amounts of library code that the user's browser has to download, parse, and execute before the page
+becomes interactive. By using vanila tech, our website will load almost instantly because we're using the browser's raw, built-in engines

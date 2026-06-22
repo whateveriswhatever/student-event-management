@@ -2,150 +2,212 @@
     require_once root_dir . "/models/student.php";
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/profile.php";
-    require_once root_dir . "/models/club.php";
-    require_once root_dir . "/models/event.php";
-    require_once root_dir . "/models/announcement.php";
+    require_once root_dir . "/models/friendship.php";
+
 
     class StudentController extends BaseController {
         private StudentRepository $studentRepo;
         private ProfileRepository $profileRepo;
+        private string $baseFolderPath;
+        private FriendshipRepository $friendshipRepo;
 
         public function __construct() {
             $this->studentRepo = new StudentRepository();
             $this->profileRepo = new ProfileRepository();
+            $this->baseFolderPath = base_folder_path;
+            $this->friendshipRepo = new FriendshipRepository();
         }
 
         public function index(): void {
-            $this->requireAuth();
-            $rawStudents = $this->studentRepo->all();
-            $this->render("students/index", ["students" => $rawStudents]);
+            try {
+                $studentID = $_SESSION["user_ID"];
+                $student = ($this->studentRepo)->findByID($studentID);
+                $profile = ($this->profileRepo)->findByStudentID($studentID);
+            } catch (Exception $ex) {
+
+            }
         }
 
-        /** POST /auth/signup — Đăng ký tài khoản mới */
         public function register(): void {
-            if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-                $this->render("auth/login_register");
-                return;
-            }
-            try {
-                $id          = $this->post("ID");
-                $firstname   = $this->post("firstname");
-                $lastname    = $this->post("lastname");
-                $age         = $this->postInt("age");
-                $phoneNumber = $this->post("phoneNumber");
-                $email       = $this->post("email");
-                $password    = $this->post("password");
-                $major       = $this->post("major");
+            if ($_SERVER["REQUEST_METHOD"] === "POST") {
+                try {
+                    // student information
+                    $id = trim($_POST["ID"]);
+                    $firstname = trim($_POST["firstname"]);
+                    $lastname = trim($_POST["lastname"]);
+                    $age = (int)$_POST["age"];
+                    $phoneNumber = trim($_POST["phoneNumber"]);
+                    $email = trim($_POST["email"]);
+                    $password = trim($_POST["password"]);
+                    
+                    // profile data
+                    $major = $_POST["major"];
+                    // $degree = $_POST["degree"];
+                    $profileID = null;
 
-                // 1. Tạo profile trước
-                $profile   = $this->profileRepo->create($id, $major);
-                $profileID = $profile ? $profile->getProfileID() : null;
-
-                // 2. Tạo student với profileID vừa tạo
-                $student = $this->studentRepo->create(
-                    $id, $firstname, $lastname, $age,
-                    $phoneNumber, $email, $profileID, $password
-                );
-
-                if ($student) {
-                    $this->redirect(BASE_URL . "/login");
+                    $profile = ($this->profileRepo)->create($id, $major);
+                    if ($profile) {
+                        $profileID = $profile->getProfileID();
+                    } else {
+                        $profileID = null;
+                    }
+                    
+                    $student = ($this->studentRepo)->create($id, $firstname, $lastname, $age, $phoneNumber, $email, $profileID, $password);
+                    if ($student) {
+                        // Redirecting back to main page
+                        header("Location: {$this->baseFolderPath}/login");
+                        exit;
+                    }
+                    $this->render("auth/login_register", ["error" => "Couldn't register a new student!"]);
+                } catch (Exception $ex) {
+                    $this->render("auth/login_register", ["error" => $ex->getMessage()]);
                 }
-                $this->render("auth/login_register", ["error" => "Không thể tạo tài khoản!"]);
-            } catch (Exception $ex) {
-                $this->render("auth/login_register", ["error" => $ex->getMessage()]);
             }
         }
 
-        /** POST /auth/login — Đăng nhập */
         public function login(): void {
-            if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-                $this->render("auth/login_register");
-                return;
-            }
-            try {
-                $studentID = $this->post("studentID");
-                $password  = $this->post("inputPassword");
+            if ($_SERVER["REQUEST_METHOD"] === "POST") {
+                try {
+                    $studentID = trim($_POST["studentID"]);
+                    $password = trim($_POST["inputPassword"]);
 
-                $student = $this->studentRepo->findByID($studentID);
-                if ($student === null) {
-                    $this->render("auth/login_register", [
-                        "error" => "Sinh viên với mã {$studentID} không tồn tại!"
-                    ]);
-                    return;
+                    $student = ($this->studentRepo)->findByID($studentID);
+                    if ($student !== null) {
+                        $hashedPassword = $student->getPassword();
+                        if (password_verify($password, $hashedPassword) === true) {
+                            // Successful log-in: saving user details to the session
+                            $_SESSION["user_ID"] = $student->getID();
+                            $_SESSION["userLastname"] = $student->getLastname();
+                            // $profile = ($this->profileRepo)->findByID((int)$student->getID());
+                            // $this->render("clubs/index", ["data" => [
+                            //     "student" => $student,
+                            //     "profile" => $profile
+                            // ]]);
+                            header("Location: {$this->baseFolderPath}");
+                            exit;
+                        } else {
+                            $this->render("auth/login_register", ["error" => "Incorrect password!"]);
+                        }   
+                    } else {
+                        $this->render("auth/login_register", ["error" => "Student with ID {$studentID} doesn't exist!"]);
+                    }
+                } catch (Exception $ex) {
+                    $this->render("auth/login_register", ["error" => $ex->getMessage()]);
                 }
-
-                if (!password_verify($password, $student->getPassword())) {
-                    $this->render("auth/login_register", ["error" => "Mật khẩu không đúng!"]);
-                    return;
-                }
-
-                // Đăng nhập thành công:
-                // Regenerate session ID để chống session fixation attack
-                session_regenerate_id(true);
-
-                $_SESSION["user_ID"]      = $student->getID();
-                $_SESSION["userLastname"] = $student->getLastname();
-                $_SESSION["userFullName"] = $student->getName();
-
-                $this->redirect(BASE_URL . "/");
-            } catch (Exception $ex) {
-                $this->render("auth/login_register", ["error" => $ex->getMessage()]);
             }
         }
 
-        /** GET /login — Hiển thị trang auth */
         public function showAuthPage(): void {
-            // Ngăn trình duyệt cache trang login
-            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-            header("Cache-Control: post-check=0, pre-check=0", false);
-            header("Pragma: no-cache");
-
-            // Nếu đã đăng nhập thì chuyển thẳng về trang chủ
-            if ($this->isAuthenticated()) {
-                $this->redirect(BASE_URL . "/");
-            }
-
-            // Seeding nếu cơ sở dữ liệu trống
-            $clubRepo = new ClubRepository();
-            if ($clubRepo->count() === 0) {
-                require_once root_dir . "/config/database-seeder.php";
-                DatabaseSeeder::seed();
-            }
-
-            // Lấy dữ liệu động từ database
-            $eventRepo = new EventRepository();
-            $announcementRepo = new AnnouncementRepository();
-
-            $clubs = $clubRepo->all();
-            $events = $eventRepo->all();
-            $announcements = $announcementRepo->all();
-
-            $this->render("auth/login_register", [
-                "clubs" => $clubs,
-                "events" => $events,
-                "announcements" => $announcements
-            ]);
+            $this->render("auth/login_register");
         }
 
-        /** POST /signout — Đăng xuất */
         public function signout(): void {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                $this->redirect(BASE_URL . "/");
-                return;
-            }
-            // Xóa toàn bộ session data
-            $_SESSION = [];
-            // Xóa session cookie nếu có
-            if (ini_get("session.use_cookies")) {
-                $params = session_get_cookie_params();
-                setcookie(
-                    session_name(), "", time() - 42000,
-                    $params["path"], $params["domain"],
-                    $params["secure"], $params["httponly"]
-                );
-            }
+            // Clearing all session variables
+            session_unset();
+            // Destroying the session
             session_destroy();
-            $this->redirect(BASE_URL . "/login");
+
+            // Redirecting back to the login page
+            header("Location: {$this->baseFolderPath}/login");
+            exit;
+        }
+
+        public function showProfile(): void {
+            // Securing the page: redirecting users to login page if the user session isn't active
+            if (!isset($_SESSION["user_ID"])) {
+                header("Location: {$this->baseFolderPath}/login");
+                exit;
+            }
+
+            try {
+                $studentID = $_SESSION["user_ID"];
+                $student = ($this->studentRepo)->findByID($studentID);
+                $profile = ($this->profileRepo)->findByStudentID($studentID);
+                // if ($student === null) {
+                //     throw new Exception("Student data couldn't be retrieved!");
+                // } else {
+                //     echo "<div>Found student with ID: {$studentID}!</div>";
+                // }
+                
+                /* Get joined clubs and events */
+                // Only clubs that students were allowed or able to join
+                $joinedClubs = ($this->studentRepo)->getAllJoinedClubs($studentID);
+                $joinedEvents = ($this->studentRepo)->getAllJoinedEvents($studentID);
+
+                $calendarEvents = [];
+                foreach ($joinedEvents as $event) {
+                    $dateStr = $event->getEventDate()->format("Y-m-d\TH:i:s");
+                    $startStr = $event->getStartTime()->format("Y-m-d\TH:i:s");
+                    $endStr = $event->getEndTime()->format("H:i:s");
+
+                    $calendarEvents[] = [
+                        "title"             => $event->getTitle(),
+                        "start"             => $startStr,
+                        "end"               => $endStr,
+                        "url"               => $this->baseFolderPath . "/clubs/show?id=" . $event->getClubID(),
+                        "backgroundColor"   => "#3b82f6",
+                        "borderColor"       => "#2563eb"
+                    ];
+                }
+
+                // Converting array into JSON string so JavaScript can understand and process
+                $calendarEventsJSON = json_encode($calendarEvents);
+
+                // Fetching accepted friend list
+                $friendsList = ($this->friendshipRepo)->getAllFriendsFromUserID($studentID);
+                $friendsData = [];
+                foreach ($friendsList as $f) {
+                    if ($f->getFromID() !== $studentID) $friendsData[] = ($this->studentRepo)->findByID($f->getFromID());
+                    if ($f->getToID() !== $studentID) $friendsData[] = ($this->studentRepo)->findByID($f->getToID());
+                }
+                
+                $this->render("profile/index", [
+                    "student"       => $student,
+                    "profile"       => $profile,
+                    "joinedClubs"   => $joinedClubs,
+                    "joinedEvents"  => $joinedEvents,
+                    "calendarJSON"  => $calendarEvents,
+                    "friends"       => $friendsData
+                ]);
+
+
+            } catch (Exception $ex) {
+                $this->render("clubs/index", ["error" => $ex->getMessage(), "description" => "Failed to load the profile page!"]);
+            }
+        }
+
+        /* GET: /profile/view?id=X */
+        public function showPublicProfile(): void {
+            if (!isset($_SESSION["user_ID"])) {
+                $this->redirect(base_folder_path . "/login");
+            }
+
+            $targetID = trim($_GET["id"] ?? '');
+            if (empty($targetID)) {
+                $this->redirect(base_folder_path . "/friends");
+            }
+
+            try {
+                $currUserID = (string)$_SESSION["user_ID"];
+                $student = ($this->studentRepo)->findByID($targetID);
+                $profile = ($this->profileRepo)->findByStudentID($targetID);
+                $joinedClubs = ($this->studentRepo)->getAllJoinedClubs($targetID);
+                $joinedEvents = ($this->studentRepo)->getAllJoinedEvents($targetID);
+
+                // Check friendship status between viewer and the profile owner
+                $friendship = ($this->friendshipRepo)->findRelationship($currUserID, $targetID);
+                $friendshipStatus = $friendship ? ($friendship->getStatus())->value : null;
+                $this->render("profile/public", [
+                    "student"           => $student,
+                    "profile"           => $profile,
+                    "joinedClubs"       => $joinedClubs,
+                    "joinedEvents"      => $joinedEvents,
+                    "friendshipStatus"  => $friendshipStatus,
+                    "currUserID"        => $currUserID
+                ]);
+            } catch (Exception $ex) {
+                $this->redirect(base_folder_path . "/friends?error=" . urlencode($ex->getMessage()));
+            }
         }
     }
 ?>
