@@ -56,6 +56,7 @@
             "/login"                    => ["StudentController", "showAuthPage"],
             "/signout"                  => ["StudentController", "signout"],
             "/profile"                  => ["StudentController", "showProfile"],
+            "/profile/view"             => ["StudentController", "showPublicProfile"],
             "/admin/create/club"        => ["ClubController", "showCreateForm"],
             "/memberships/all-members"  => ["MembershipController", "getMembersJson"],
             "/feedbacks/chat-history"   => ["FeedbackController", "chatHistory"],

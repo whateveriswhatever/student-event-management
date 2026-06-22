@@ -175,5 +175,39 @@
                 $this->render("clubs/index", ["error" => $ex->getMessage(), "description" => "Failed to load the profile page!"]);
             }
         }
+
+        /* GET: /profile/view?id=X */
+        public function showPublicProfile(): void {
+            if (!isset($_SESSION["user_ID"])) {
+                $this->redirect(base_folder_path . "/login");
+            }
+
+            $targetID = trim($_GET["id"] ?? '');
+            if (empty($targetID)) {
+                $this->redirect(base_folder_path . "/friends");
+            }
+
+            try {
+                $currUserID = (string)$_SESSION["user_ID"];
+                $student = ($this->studentRepo)->findByID($targetID);
+                $profile = ($this->profileRepo)->findByStudentID($targetID);
+                $joinedClubs = ($this->studentRepo)->getAllJoinedClubs($targetID);
+                $joinedEvents = ($this->studentRepo)->getAllJoinedEvents($targetID);
+
+                // Check friendship status between viewer and the profile owner
+                $friendship = ($this->friendshipRepo)->findRelationship($currUserID, $targetID);
+                $friendshipStatus = $friendship ? ($friendship->getStatus())->value : null;
+                $this->render("profile/public", [
+                    "student"           => $student,
+                    "profile"           => $profile,
+                    "joinedClubs"       => $joinedClubs,
+                    "joinedEvents"      => $joinedEvents,
+                    "friendshipStatus"  => $friendshipStatus,
+                    "currUserID"        => $currUserID
+                ]);
+            } catch (Exception $ex) {
+                $this->redirect(base_folder_path . "/friends?error=" . urlencode($ex->getMessage()));
+            }
+        }
     }
 ?>
