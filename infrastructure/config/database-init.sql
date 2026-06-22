@@ -111,7 +111,7 @@ create table Attendance (
 );
 
 
-create table Annoucement(
+create table Announcement(
     ID int auto_increment primary key,
     club_ID int not null,
     author_ID varchar(8) not null,
@@ -132,4 +132,17 @@ create table Feedback (
     foreign key (from_user_ID) references Student(ID),
     foreign key (to_user_ID) references Student(ID),
     foreign key (on_event_ID) references Event(ID)
+);
+
+create table Friendship (
+    ID int auto_increment primary key, 
+    from_user_ID varchar(50) not null,
+    to_user_ID varchar(50) not null,
+    sender_ID varchar(50) not null,
+    status enum("pending", "accepted", "blocked") default "pending",
+    created_at datetime default current_timestamp,
+
+    unique key unique_friendship (from_user_ID, to_user_ID),
+    foreign key (from_user_ID) references Student(ID),
+    foreign key (to_user_ID) references Student(ID)
 );
