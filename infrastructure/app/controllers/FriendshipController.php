@@ -44,7 +44,7 @@
 
             // Render View using standard 'displayUsers' variable
             $this->render("friends/index", [
-                "currUserID"           => $currUserID,
+                "currUserID"        => $currUserID,
                 "pendingRequests"   => $storage,
                 "displayUsers"      => $displayUsers,
                 "isSearching"       => false

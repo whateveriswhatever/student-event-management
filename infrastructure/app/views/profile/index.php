@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/global.css" />
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/ClubPage.css">
     <style>
-        /* Clickable Grid Card Action Styling */
+                /* Clickable Grid Card Action Styling */
         .clickable-card {
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.2s ease;
@@ -120,6 +120,7 @@
         .friend-row {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 12px 0;
             border-bottom: 1px solid #f1f5f9;
         }
@@ -303,12 +304,16 @@
                 <?php if (!empty($friends)): ?>
                     <?php foreach ($friends as $friend): ?>
                         <div class="friend-row">
-                            <img src="https://api.dicebear.com/7.x/initials/svg?seed=<?= $friend->getLastname(); ?>" alt="Avatar" class="modal-friend-avatar">
+                            <a href="<?= base_folder_path ?>/profile/view?id=<?= htmlspecialchars($friend->getID()); ?>" style="display: flex; text-decoration: none; cursor: pointer;">
+                                <img src="https://api.dicebear.com/7.x/initials/svg?seed=<?= $friend->getLastname(); ?>" alt="Avatar" class="modal-friend-avatar">
+                                <div class="modal-friend-info">
+                                    <span class="friend-fullname"><?= htmlspecialchars($friend->getFirstname() . ' ' . $friend->getLastname()) ?></span>
+                                    <span class="friend-username">@<?= htmlspecialchars($friend->getID()) ?></span>
+                                </div>
+                            </a>
+                            
                         
-                            <div class="modal-friend-info">
-                                <span class="friend-fullname"><?= htmlspecialchars($friend->getFirstname() . ' ' . $friend->getLastname()) ?></span>
-                                <span class="friend-username">@<?= htmlspecialchars($friend->getID()) ?></span>
-                            </div>
+                            
                         
                             <form action="<?= base_folder_path ?>/friends/unfriend" method="POST" onsubmit="return confirm('Are you sure you want to unfriend this classmate?');">
                                 <input type="hidden" name="friend_ID" value="<?= htmlspecialchars($friend->getID()) ?>">

@@ -167,8 +167,12 @@
                     ?>
 
                     <div class="student-card">
-                        <img src="https://api.dicebear.com/7.x/initials/svg?seed=<?= htmlspecialchars($student->getLastname()) ?>" alt="Avatar">
-                        <h3 class="student-name"><?= htmlspecialchars($student->getFirstname() . ' ' . $student->getLastname()) ?></h3>
+                        <a href="<?= base_folder_path ?>/profile/view?id=<?= htmlspecialchars($student->getID()) ?>"
+                            style="text-decoration: none; color: inherit; display: block;">
+                            <img src="https://api.dicebear.com/7.x/initials/svg?seed=<?= htmlspecialchars($student->getLastname()) ?>" alt="Avatar">
+                            <h3 class="student-name"><?= htmlspecialchars($student->getFirstname() . ' ' . $student->getLastname()) ?></h3>
+                        </a>
+                        
                         <p class="student-context">
                             <?php if ($mutuals > 0): ?>
                                 <span class="context-highlight"><?= $mutuals ?> mutual friend<?= $mutuals > 1 ? 's' : '' ?></span>
@@ -187,7 +191,8 @@
                             <?php endif; ?>
                         </p>
                         
-                        <?php if ($friendshipStatus === "pending" && $senderID !== '' && $senderID !== $currUserID): ?>
+                        <?php if ($friendshipStatus === "pending" && $senderID !== '' && $senderID !== $_SESSION["user_ID"]): ?>
+                            <!-- <div>The current user ID -> <?= $_SESSION["user_ID"] ?> isn't the same with sender ID <?= $senderID ?></div> -->
                             <div style="display: flex; gap: 0.5rem; width: 100%; margin-top: 10px;">
                                 <form action="<?= base_folder_path ?>/friends/accept" method="POST" style="flex: 1; margin: 0;">
                                     <input type="hidden" name="sender_ID" value="<?= htmlspecialchars($student->getID()) ?>">
@@ -200,7 +205,7 @@
                                 </form>
                             </div>
                         <?php else: ?>
-                            <?php if ($friendshipStatus === "pending" && $senderID === $currUserID): ?>
+                            <?php if ($friendshipStatus === "pending" && $senderID === $_SESSION["user_ID"]): ?>
                                 <div class="friend-dropdown-toggle" style="position: relative; width: 100%;">
                                     <button class="btn btn-add" style="width: 100%; background-color: #706D6D; color: #fff;">
                                         Sent a request ▾
