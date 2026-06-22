@@ -90,6 +90,8 @@ student-event-management/
 ## 🗄️ Database Schema
 
 ### Entity Relationship Diagram (ERD)
+![Uploading Screenshot 2026-06-22 175434.png…]()
+
 
 The C&B Hub database is designed with the following key entities:
 
@@ -350,9 +352,9 @@ We welcome all contributions from everyone! Whether you're a VNU student or not,
 
 | Name | Student ID | Role |
 |------|-----------|------|
-| **Duy La** | 22071044 | Lead Developer |
-| **Tuan Nguyen** | 22071083 | Backend Developer |
-| **Khanh Phan** | 22070980 | Frontend Developer |
+| **Duy La** | 22071044 | Developer |
+| **Tuan Nguyen** | 22071083 | Developer |
+| **Khanh Phan** | 22070980 | Developer |
 
 ---
 
