@@ -1,0 +1,8 @@
+#admin-stats-modal {
+  display: none !important;
+  opacity: 1 !important;
+  transition: none !important;
+}
+#admin-stats-modal.active {
+  display: flex !important;
+}
