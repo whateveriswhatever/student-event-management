@@ -47,6 +47,7 @@
             "/club/members"             => ["MembershipController", "clubMembers"],
             "/clubs/show"               => ["ClubController", "show"],
             "/clubs/my-clubs"           => ["ClubController", "myClubs"],
+            "/clubs/admin-stats"        => ["ClubController", "adminStats"],
             "/events"                   => ["EventController", "index"],
             "/events/comments"          => ["EventController", "getEventComments"],
             "/announcements"            => ["AnnouncementController", "index"],

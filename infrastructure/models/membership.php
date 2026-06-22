@@ -282,5 +282,16 @@
                 fn ($row) => $this->hydrate($row), $rows
             );
         }
+
+        public function getAllMembershipsInClubViaStatus(int $cID, MembershipStatus $s): array {
+            $rows = $this->findViaCriteria([
+                "club_ID"           => $cID,
+                "membership_status" => $s->value
+            ]);
+            if (empty($rows)) return [];
+            return array_map(
+                fn ($row) => $this->hydrate($row), $rows
+            );
+        }
     }
 ?>

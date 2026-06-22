@@ -47,6 +47,7 @@
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($club->getName()) ?> - Club Details</title>
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/ClubPage.css">
+    <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/ClubAdminDashboard.css">
 </head>
 <body>
     <div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
@@ -104,12 +105,21 @@
     <div style="margin-top: 40px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="font-size: 1.5rem; color: #1e293b; margin-bottom: 20px;">📅 Club Events</h2>
-
-            <?php if (isset($currentUserRole) && in_array($currentUserRole, ["president", "vice president", "vp"])): ?>
-                <button id="open-create-event-btn" style="background-color: #10b981; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
-                    + Create Event
-                </button>
-            <?php endif; ?>
+            <div>
+                <?php if (isset($currentUserRole) && in_array($currentUserRole, ["president", "vice president", "vp"])): ?>
+                    <button id="open-create-event-btn" style="background-color: #10b981; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                        + Create Event
+                    </button>
+                
+                    <?php if (isset($isExecutive) && $isExecutive): ?>
+                        <button id="open-admin-dashboard-btn"
+                                style="background-color: #7c3aed; color: #fff; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+                                Admin Dashboard
+                        </button>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+            
         </div>
             
 
@@ -402,8 +412,28 @@
             </form>
         </div>
     </div>
+
+    <!-- Admin Stats Modal -->
+    <div id="admin-stats-modal"
+        class="modal-overlay" 
+        style="display:none;"
+        data-club-id="<?= (int)$club->getID() ?>"
+        data-base-path="<?= base_folder_path ?>">
+        <div class="modal-content" style="max-width:640px; width:95%;">
+            <div class="modal-header">
+                <h3 style="margin:0;">📊 Club Admin Dashboard</h3>
+                <button id="close-admin-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                <div id="admin-stats-content">
+                    <p style="color:#64748b; text-align:center;">Loading stats...</p>
+                </div>
+            </div>  
+        </div>
+    </div>
     
-    <script src="<?= ASSET_URL ?>/assets/js/ClubDetailPage.js?v=<?= time() ?>"></script>
-    <script src="<?= ASSET_URL ?>/assets/js/EventComments.js?v=<?= time() ?>"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/ClubDetailPage.js?v=<?= time(); ?>"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/EventComments.js?v=<?= time(); ?>"></script>
+    <script src="<?= ASSET_URL ?>/assets/js/ClubAdminDashboard.js?v=<?= time(); ?>"></script>
 </body>
 </html>

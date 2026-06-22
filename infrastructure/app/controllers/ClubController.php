@@ -13,6 +13,7 @@
         private RoleRepository $roleRepo;
         private LocationRepository $locationRepo;
         private EventRegistrationRepository $eventRegisterRepo;
+        private EventRepository $eventRepo;
 
         public function __construct() {
             $this->clubRepo = new ClubRepository();
@@ -20,6 +21,7 @@
             $this->roleRepo = new RoleRepository();
             $this->locationRepo = new LocationRepository();
             $this->eventRegisterRepo = new EventRegistrationRepository();
+            $this->eventRepo = new EventRepository();
         }
 
         public function index(): void {
@@ -529,6 +531,63 @@
                 error_log("Failed to kick member: " . $ex->getMessage());
                 $this->redirect(base_folder_path . "/clubs/show?id=" . $clubID . "&error=" . urlencode($ex->getMessage()));
             }
+        }
+
+        /* GET: /clubs/admin-stats?id=X */
+        public function adminStats(): void {
+            ob_start();
+            header("Content-Type: application/json");
+
+            if (!isset($_SESSION["user_ID"])) {
+                ob_end_clean();
+                echo json_encode(["error" => "unauthorized"]);
+                return;
+            }
+
+            $clubID = (int)($_GET["id"] ?? 0);
+            $studentID = (string)$_SESSION["user_ID"];
+
+            // Verifying the requester is an executive
+            $membership = ($this->membershipRepo)->findMembership($studentID, $clubID);
+            if ($membership === null) {
+                echo json_encode(["error" => "not a member"]);
+                return;
+            }
+            $roleID = $membership->getRoleID();
+            $role = ($this->roleRepo)->findByID($roleID);
+            $roleTitle = $role->getTitle();
+            
+            if (!in_array($roleTitle->value, ["president", "vice president"])) {
+                echo json_encode([
+                    "error"         => "forbidden",
+                    "role-title"    => $roleTitle
+                ]);
+                return;
+            }
+
+            // Membership status breakdown
+            $statuses = ["active", "pending", "rejected", "banned", "left"];
+            $statusCounts = [];
+            foreach ($statuses as $s) {
+                $membershipStatuses = ($this->membershipRepo)->getAllMembershipsInClubViaStatus($clubID, MembershipStatus::from($s));
+                $statusCounts[$s] = count($membershipStatuses); 
+            }
+
+            // Peak event hosting hours
+            $allEvents = ($this->eventRepo)->findAllFromClub($clubID);
+            $hourBuckets = array_fill(0, 24, 0);
+            foreach ($allEvents as $event) {
+                $hour = (int)($event->getStartTime())->format("H");
+                $hourBuckets[$hour]++;
+            }
+
+            echo json_encode([
+                "totalMembers"  => $statusCounts["active"],
+                "statusCounts"  => $statusCounts,
+                "peakHours"     => $hourBuckets,
+                "totalEvents"   => count($allEvents)
+            ]);
+            exit;
         }
     }
 ?>

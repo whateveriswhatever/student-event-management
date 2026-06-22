@@ -265,8 +265,9 @@
 
         public function findAllFromClub(int $cID): array {
             $rows = $this->findViaCriteria(["club_ID" => $cID]);
+            if (empty($rows)) return [];
             return array_map(
-                fn($row) => $this->$row, $rows
+                fn($row) => $this->hydrate($row), $rows
             );
         }
 
