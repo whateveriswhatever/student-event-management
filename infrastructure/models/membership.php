@@ -180,7 +180,7 @@
             return $this->hydrate($rows[0]);
         }
 
-        public function getJoinedClubIDOfAStudent(int $sID): array {
+        public function getJoinedClubIDOfAStudent(string $sID): array {
             $rows = $this->findViaCriteria(["student_ID" => $sID]);
             return array_map(
                 fn ($row) => (int)$row["club_ID"], $rows
@@ -263,7 +263,7 @@
         }
         
         /* Only clubs that students were allowed or able to join successully */
-        public function getAllJoinedClubIDsViaStudentID(int $sID): array {
+        public function getAllJoinedClubIDsViaStudentID(string $sID): array {
             $rows = $this->findViaCriteria(
                 [
                     "student_ID"        => $sID,

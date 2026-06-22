@@ -7,8 +7,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">   
     <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/css/ClubPage.css">
-    <title>Homepage</title>
 </head>
 
 
@@ -73,7 +73,9 @@
                     min="1" value="<?= htmlspecialchars($_GET["search_ID"] ?? '') ?>"
                     class="search-id" />
 
-                <button type="submit" class="btn-primary search-btn">Search</button>
+                <button type="submit" class="btn-primary search-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
                     
                 <?php if (!empty($_GET["search_name"]) || !empty($_GET["search_ID"])): ?>
                     <a href="<?= base_folder_path ?>/clubs"
@@ -163,5 +165,7 @@
     </div>
 
     <script src="<?= ASSET_URL ?>/assets/js/ClubPage.js"></script>
+    <script src="https://kit.fontawesome.com/YOUR_KIT_CODE.js" crossorigin="anonymous"></script>
+
 </body>
 </html>

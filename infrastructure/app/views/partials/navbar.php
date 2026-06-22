@@ -1,3 +1,7 @@
+<?php
+    
+?>
+
 <nav class="navbar">
     <a href="<?= base_folder_path ?>/clubs" class="nav-left">
         <div class="nav-logo">
@@ -9,6 +13,7 @@
     <div class="nav-middle">
         <a href="<?= base_folder_path ?>/clubs" class="nav-link">Discover</a>
         <a href="<?= base_folder_path ?>/events" class="nav-link">Events</a>
+        <a href="<?= base_folder_path ?>/friends" class="nav-link">Friends</a>
         <a href="<?= base_folder_path ?>/clubs/my-clubs" class="nav-link">My Clubs</a>
         <a href="<?= base_folder_path ?>/profile" class="nav-link">Profile</a>
     </div>

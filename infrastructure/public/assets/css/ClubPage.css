@@ -336,3 +336,156 @@ body {
   padding: 10px 0;
   border-bottom: 1px solid #f1f5f9;
 }
+
+.clubs-header {
+  margin-bottom: 2rem;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 1rem;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+}
+
+.page-subtitle {
+  margin-top: 0.5rem;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.create-btn {
+  background: #2563eb;
+  color: white;
+
+  padding: 0.75rem 1.25rem;
+
+  border-radius: 10px;
+
+  text-decoration: none;
+
+  font-weight: 600;
+
+  transition: 0.2s ease;
+}
+
+.create-btn:hover {
+  background: #1d4ed8;
+  color: white;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 1rem;
+}
+
+.search-input,
+.search-id {
+  height: 48px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 10px;
+
+  padding: 0 14px;
+
+  font-size: 0.95rem;
+}
+
+.search-input {
+  flex: 1;
+}
+
+.search-id {
+  width: 140px;
+}
+
+.search-btn {
+  height: 48px;
+
+  min-width: 120px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.search-btn:hover {
+  background: #1d4ed8;
+}
+
+.clear-btn {
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 20px;
+
+  border-radius: 10px;
+
+  background: #e5e7eb;
+
+  color: #374151;
+
+  text-decoration: none;
+
+  font-weight: 600;
+}
+
+.clear-btn:hover {
+  background: #d1d5db;
+}
+
+.club-count {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .search_row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input,
+  .search-id,
+  .search-btn,
+  .clear-btn {
+    width: 100%;
+  }
+}

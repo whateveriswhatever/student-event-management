@@ -1,6 +1,10 @@
 <?php 
     define("ASSET_URL", base_folder_path . "/public"); 
     $activePage = 'my-clubs'; // For navbar highlighting if you added this link
+
+    if (!isset($searchQuery)) {
+        $searchQuery = "";
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">

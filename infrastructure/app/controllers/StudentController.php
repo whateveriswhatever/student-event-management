@@ -2,17 +2,20 @@
     require_once root_dir . "/models/student.php";
     require_once root_dir . "/app/controllers/BaseController.php";
     require_once root_dir . "/models/profile.php";
+    require_once root_dir . "/models/friendship.php";
 
 
     class StudentController extends BaseController {
         private StudentRepository $studentRepo;
         private ProfileRepository $profileRepo;
         private string $baseFolderPath;
+        private FriendshipRepository $friendshipRepo;
 
         public function __construct() {
             $this->studentRepo = new StudentRepository();
             $this->profileRepo = new ProfileRepository();
             $this->baseFolderPath = base_folder_path;
+            $this->friendshipRepo = new FriendshipRepository();
         }
 
         public function index(): void {
@@ -149,13 +152,22 @@
 
                 // Converting array into JSON string so JavaScript can understand and process
                 $calendarEventsJSON = json_encode($calendarEvents);
+
+                // Fetching accepted friend list
+                $friendsList = ($this->friendshipRepo)->getAllFriendsFromUserID($studentID);
+                $friendsData = [];
+                foreach ($friendsList as $f) {
+                    if ($f->getFromID() !== $studentID) $friendsData[] = ($this->studentRepo)->findByID($f->getFromID());
+                    if ($f->getToID() !== $studentID) $friendsData[] = ($this->studentRepo)->findByID($f->getToID());
+                }
                 
                 $this->render("profile/index", [
                     "student"       => $student,
                     "profile"       => $profile,
                     "joinedClubs"   => $joinedClubs,
                     "joinedEvents"  => $joinedEvents,
-                    "calendarJSON"  => $calendarEvents
+                    "calendarJSON"  => $calendarEvents,
+                    "friends"       => $friendsData
                 ]);
 
 
