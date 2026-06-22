@@ -84,7 +84,9 @@
             "/feedbacks/submit"         => ["FeedbackController", "store"],
             "/friends/add"              => ["FriendshipController", "addFriend"],
             "/friends/accept"           => ["FriendshipController", "acceptFriend"],
-            "/friends/decline"          => ["FriendshipController", "declineFriend"]
+            "/friends/decline"          => ["FriendshipController", "declineFriend"],
+            "/friends/unfriend"         => ["FriendshipController", "unfriend"],
+            "/friends/withdrawRequest"  => ["FriendshipController", "withdrawRequest"]
         ]
     ];
 

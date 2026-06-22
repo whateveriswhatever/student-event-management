@@ -28,7 +28,7 @@
             $pendingRequests = ($this->friendshipRepo)->getAllPendingRequestsFromUserID($currUserID);
             $storage = [];
             foreach ($pendingRequests as $request) {
-                $senderID = $request->getFromID();
+                $senderID = $request->getSenderID();
                 $senderData = ($this->studentRepo)->findByID($senderID);
                 if ($senderData) {
                     $storage[] = [
@@ -44,9 +44,10 @@
 
             // Render View using standard 'displayUsers' variable
             $this->render("friends/index", [
-                "pendingRequests" => $storage,
-                "displayUsers"    => $displayUsers,
-                "isSearching"     => false
+                "currUserID"           => $currUserID,
+                "pendingRequests"   => $storage,
+                "displayUsers"      => $displayUsers,
+                "isSearching"       => false
             ]);
         }
 
@@ -199,6 +200,55 @@
 
         }
 
+        /* POST: /friends/unfriend */
+        public function unfriend(): void {
+            $currUserID = (string)($_SESSION["user_ID"] ?? '');
+            $friendID = (string)($_POST["friend_ID"] ?? '');
+
+            $fromID = ($currUserID < $friendID) ? $currUserID : $friendID;
+            $toID = ($currUserID > $friendID) ? $currUserID : $friendID;
+
+            if (empty($currUserID) || empty($friendID)) {
+                $this->redirect(base_folder_path . "/friends?error=missing-data");
+            }
+
+            // Check both directions since either person could have sent the original request
+            $existing = ($this->friendshipRepo)->findRelationship($fromID, $toID);
+            if ($existing === null) {
+                $this->redirect(base_folder_path . "/friends?error=no-friendship-found");
+            }
+
+            $isDeleted = ($this->friendshipRepo)->deleteFriendship($currUserID, $friendID);
+            if ($isDeleted) {
+                $this->redirect(base_folder_path . "/friends?success=unfriend");
+            } else {
+                $this->redirect(base_folder_path . "/friends?error=failed-to-unfriend");
+            }
+        }
+
+        /* POST: /friendship/withdraw */
+        public function withdrawRequest(): void {
+            $currUserID = (string)($_SESSION["user_ID"] ?? '');
+            $receiverID = (string)($_POST["receiver_ID"] ?? "");
+
+            if (empty($currUserID) || empty($receiverID)) {
+                $this->redirect(base_folder_path . "/friends?error=missing-data&currUserID={$currUserID}-receiverID={$receiverID}");
+            }
+
+            // The current user is always the sender here, so direction is known
+            $existing = ($this->friendshipRepo)->findRelationship($currUserID, $receiverID);
+            if ($existing === null) {
+                $this->redirect(base_folder_path . "/friends?error=no-sent-request-found");
+            }
+
+            $isDeleted = ($this->friendshipRepo)->deleteFriendship($currUserID, $receiverID);
+            if ($isDeleted) {
+                $this->redirect(base_folder_path . "/friends?success=request-withdrawn");
+            } else {
+                $this->redirect(base_folder_path . "/friends?error=failed-to-withdraw");
+            }
+        }
+
         /* GET: testing API for getting recommendation */
         public function friendRecommendedTestingAPI(): void {
             $currID = trim($_GET["curr_ID"] ?? '');
@@ -211,5 +261,7 @@
                 $displayUsers
             );
         }
+
+
     }
 ?>

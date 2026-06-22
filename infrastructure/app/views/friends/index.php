@@ -1,6 +1,9 @@
 <?php 
     define("ASSET_URL", base_folder_path . "/public"); 
     include root_dir . "/app/views/partials/navbar.php"; 
+
+    $currUserID = $currUserID ?? null;
+    $displayUsers = $displayUsers ?? [];
 ?>
 
 <!DOCTYPE html>
@@ -184,7 +187,7 @@
                             <?php endif; ?>
                         </p>
                         
-                        <?php if ($friendshipStatus === "pending" && $senderID !== ''): ?>
+                        <?php if ($friendshipStatus === "pending" && $senderID !== '' && $senderID !== $currUserID): ?>
                             <div style="display: flex; gap: 0.5rem; width: 100%; margin-top: 10px;">
                                 <form action="<?= base_folder_path ?>/friends/accept" method="POST" style="flex: 1; margin: 0;">
                                     <input type="hidden" name="sender_ID" value="<?= htmlspecialchars($student->getID()) ?>">
@@ -197,17 +200,76 @@
                                 </form>
                             </div>
                         <?php else: ?>
-                            <form action="<?= base_folder_path ?>/friends/add" method="POST" style="width: 100%; margin-top: 10px;">
-                                <input type="hidden" name="receiver_ID" value="<?= htmlspecialchars($student->getID()) ?>">
-                            
-                                <?php if ($friendshipStatus === "pending" && $senderID === $currUserID): ?>    
-                                    <button class="btn btn-add" style="width: 100%; background-color: #706D6D;" disabled>Sent a request</button>
-                                <?php elseif ($friendshipStatus === "accepted"): ?>
-                                    <button class="btn btn-add" style="width: 100%; background-color: #ADA8A8;" disabled>Friends</button>
-                                <?php else: ?>
+                            <?php if ($friendshipStatus === "pending" && $senderID === $currUserID): ?>
+                                <div class="friend-dropdown-toggle" style="position: relative; width: 100%;">
+                                    <button class="btn btn-add" style="width: 100%; background-color: #706D6D; color: #fff;">
+                                        Sent a request ▾
+                                    </button>
+                                    <div class="friend-dropdown-menu" style="
+                                        display: none;
+                                        position: absolute;
+                                        bottom: calc(100% + 6px);
+                                        left: 0;
+                                        width: 100%;
+                                        background: #fff;
+                                        border: 1px solid #e2e8f0;
+                                        border-radius: 8px;
+                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                                        overflow: hidden;
+                                        z-index: 100;
+                                        animation: dropUp 0.2 ease;
+                                    ">
+                                        <form action="<?= base_folder_path?>/friends/withdrawRequest" method="POST">
+                                            <input type="hidden" name="receiver_ID" value="<?= htmlspecialchars($student->getID()) ?>">
+                                            <button type="submit"
+                                                style="width: 100%; padding: 10px 16px; background: none; border: none;
+                                                        color: #f59e0b; font-weight: 600; font-size: 14px; cursor: pointer;
+                                                        text-align: left; display: flex; align-items: center; gap: 8px;"
+                                                onmouseover="this.style.background='#fffbeb'"
+                                                onmouseout="this.style.background='none'"
+                                                onclick="return confirm('Withdraw this friend request?')">
+                                                ↩ Withdraw Request
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php elseif ($friendshipStatus === "accepted"): ?>
+                                <div class="friend-dropdown-toggle" style="position: relative; width: 100%;">
+                                    <button class="btn btn-add" style="width: 100%; background-color: #10b981; color: #fff;"> ✓ Friends ▾</button>
+                                    <div class="friend-dropdown-menu" style="
+                                        display: none;
+                                        position: absolute;
+                                        bottom: calc(100% + 6px);
+                                        left: 0;
+                                        width: 100%;
+                                        background: #fff;
+                                        border: 1px solid #e2e8f0;
+                                        border-radius: 8px;
+                                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                                        overflow: hidden;
+                                        z-index: 100;
+                                        animation: dropUp 0.2s ease;
+                                    ">
+                                        <form action="<?= base_folder_path ?>/friends/unfriend" method="POST">
+                                            <input type="hidden" name="friend_ID" value="<?= htmlspecialchars($student->getID()) ?>">
+                                                <button type="submit"
+                                                        style="width: 100%; padding: 10px 16px; background: none; border: none;
+                                                        color: #ef4444; font-weight: 600; font-size: 14px; cursor: pointer;
+                                                        text-align: left; display: flex; align-items: center; gap: 8px;"
+                                                        onmouseover="this.style.background='#fef2f2'"
+                                                        onmouseout="this.style.background='none'"
+                                                        onclick="return confirm('Remove this friend?')">
+                                                    🗑 Unfriend
+                                                </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                            <?php else: ?>
+                                <form action="<?= base_folder_path ?>/friends/add" method="POST" style="width: 100%; margin-top: 10px;">
+                                    <input type="hidden" name="receiver_ID" value="<?= htmlspecialchars($student->getID()) ?>" />
                                     <button class="btn btn-add" style="width: 100%;">Add Friend</button>
-                                <?php endif; ?>
-                            </form>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                         <!-- <form action="<?= base_folder_path ?>/friends/add" method="POST">
@@ -225,5 +287,43 @@
             </div>
         <?php endif; ?>
     </div>
+
+    <style>
+        @keyframes dropUp {
+            from {
+                opacity: 0; 
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Toggle dropdown on button click
+            document.querySelectorAll(".friend-dropdown-toggle").forEach((wrapper) => {
+                console.log(`Clicked on the accpeted button to see unfriend option!`);
+                const btn = wrapper.querySelector("button");
+                const menu = wrapper.querySelector(".friend-dropdown-menu");
+
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const isOpen = menu.style.display === "block";
+
+                    // Close all other open dropdowns first
+                    document.querySelectorAll(".friend-dropdown-menu").forEach(m => m.style.display = "none");
+
+                    menu.style.display = isOpen ? "none" : "block";
+                });
+            });
+
+            // Click anywhere outside to close all dropdowns
+            document.addEventListener("click", () => {
+                document.querySelectorAll(".friend-dropdown-menu").forEach(m => m.style.display = "none");
+            });
+        });
+    </script>
 </body>
 </html>

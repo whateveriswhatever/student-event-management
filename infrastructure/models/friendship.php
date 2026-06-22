@@ -112,8 +112,7 @@
                 "to_user_ID"    => $friendship->getToID(),
                 "sender_ID"     => $friendship->getSenderID(),
                 "status"        => ($friendship->getStatus())->value,
-                "created_at"    => ($friendship->getCreatedAt())->format("Y-m-d"),
-                "sender_ID"     => $senderID
+                "created_at"    => ($friendship->getCreatedAt())->format("Y-m-d")
             ]);
 
             if ($isSuccess) {
@@ -258,6 +257,17 @@
             return array_map(
                 fn ($row) => $this->hydrate($row), $data
             );
+        }
+
+        public function deleteFriendship(string $userID1, string $userID2): bool {
+            $fromID = ($userID1 < $userID2) ? $userID1 : $userID2;
+            $toID = ($userID1 > $userID2) ? $userID1 : $userID2;
+
+            $isDeleted = $this->deleteViaCriteria([
+                "from_user_ID"  => $fromID,
+                "to_user_ID"    => $toID
+            ]);
+            return $isDeleted;
         }
     }
 
