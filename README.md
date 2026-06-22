@@ -12,6 +12,7 @@ A lightweight, fast, and efficient event management platform exclusively designe
 - [Features](#-features)
 - [Technology Stack](#-technology-stack)
 - [Project Structure](#-project-structure)
+- [Database Schema](#-database-schema)
 - [Prerequisites](#-prerequisites)
 - [Installation & Setup](#-installation--setup)
 - [Usage](#-usage)
@@ -53,8 +54,8 @@ A lightweight, fast, and efficient event management platform exclusively designe
 
 | Layer | Technology |
 |-------|-----------|
-| **Backend** | PHP (83.9%) |
-| **Frontend** | Vanilla JavaScript (2.9%), HTML, CSS (13.2%) |
+| **Backend** | PHP (82.3%) |
+| **Frontend** | Vanilla JavaScript (6.6%), HTML, CSS (11.1%) |
 | **Architecture** | Central Front Router with Server-Side Rendering (SSR) |
 | **Deployment** | Vercel |
 
@@ -83,6 +84,68 @@ student-event-management/
 ├── design.drawio                  # System design diagrams
 └── README.md                      # This file
 ```
+
+---
+
+## 🗄️ Database Schema
+
+### Entity Relationship Diagram (ERD)
+
+The C&B Hub database is designed with the following key entities:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      DATABASE ENTITIES                          │
+└─────────────────────────────────────────────────────────────────┘
+
+├── User Tables
+│   ├── Student          - Core student information
+│   ├── Profile          - Extended user profile details
+│   ├── Role             - User role definitions
+│   └── Friendship       - Social connections between students
+│
+├── Event Management
+│   ├── Event            - Event details (title, date, time, location)
+│   ├── Club             - Student clubs/organizations
+│   ├── Announcement     - Event announcements and notifications
+│   ├── Location         - Event venue information
+│   └── Event_Registration - Student registration records
+│
+├── Engagement & Feedback
+│   ├── Attendance       - Event attendance tracking
+│   └── Feedback         - User feedback and ratings
+│
+└── Organization
+    └── Club_Membership  - Membership records and roles
+```
+
+### Key Tables
+
+**Student Table**
+- Primary Key: ID
+- Fields: Email, Username, Password, Phone, Photo, DOB, Status, Profile_ID
+
+**Event Table**
+- Primary Key: ID
+- Fields: Club_ID, Title, Description, Date, Start_Time, End_Time, Location_ID, Max_Participants, Status, Created_Timestamp, Updated_Timestamp
+
+**Club Table**
+- Primary Key: ID
+- Fields: Name, Description, Founded_Date, Tags, Status, Total_Members
+
+**Event_Registration Table**
+- Primary Key: ID
+- Fields: Student_ID, Event_ID, Registration_Date, Registration_Status
+
+**Attendance Table**
+- Primary Key: ID
+- Fields: Registration_ID, Create_At_Time, Attendance_Status
+
+**Feedback Table**
+- Primary Key: ID
+- Fields: Event_User_ID, Feedback_Creator_ID, JRE_EventName, JSE_EventDescription
+
+For a detailed visual representation, see `design.drawio` in the repository root.
 
 ---
 
@@ -349,4 +412,3 @@ Special thanks to:
 **Built with ❤️ by the C&B Hub Team for the VNU Community**
 
 *Making student events more accessible and connected* 🎉
-
