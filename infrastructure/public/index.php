@@ -57,7 +57,10 @@
             "/profile"                  => ["StudentController", "showProfile"],
             "/admin/create/club"        => ["ClubController", "showCreateForm"],
             "/memberships/all-members"  => ["MembershipController", "getMembersJson"],
-            "/feedbacks/chat-history"   => ["FeedbackController", "chatHistory"]
+            "/feedbacks/chat-history"   => ["FeedbackController", "chatHistory"],
+            "/friends"                  => ["FriendshipController", "index"],
+            "/friends/search"           => ["FriendshipController", "searchFriend"],
+            "/friends/recommended-service-testing"  => ["FriendshipController", "friendRecommendedTestingAPI"]
         ],
 
         "POST" => [
@@ -77,7 +80,10 @@
             "/auth/login"               => ["StudentController", "login"],
             "/auth/signup"              => ["StudentController", "register"],
             "/admin/create/club"        => ["ClubController", "store"],
-            "/feedbacks/submit"          => ["FeedbackController", "store"]
+            "/feedbacks/submit"         => ["FeedbackController", "store"],
+            "/friends/add"              => ["FriendshipController", "addFriend"],
+            "/friends/accept"           => ["FriendshipController", "acceptFriend"],
+            "/friends/decline"          => ["FriendshipController", "declineFriend"]
         ]
     ];
 
