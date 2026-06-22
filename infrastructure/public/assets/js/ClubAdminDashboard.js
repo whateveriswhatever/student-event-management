@@ -47,6 +47,7 @@
           return;
         }
         console.log(`No error => loading statistics...`);
+        window.__adminDashboardData = data;
         renderStats(data);
       })
       .catch((e) => {
