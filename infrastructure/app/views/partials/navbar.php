@@ -19,7 +19,7 @@
             if (isset($_SESSION["user_ID"])):
         ?>
             <div class="profile-info">
-                <a href="<?= base_folder_path ?>/profile" style="display: flex; justify-content: center; align-items: center; gap: 0.75rem; padding-right: 1.25rem;">
+                <a href="<?= base_folder_path ?>/profile" style="display: flex; justify-content: center; align-items: center; gap: 0.75rem; padding-right: 1.25rem; text-decoration: none;">
                     <img src="https://api.dicebear.com/7.x/initials/svg?seed=<?= $_SESSION['userLastname'] ?? 'ST' ?>" alt="Avatar" class="avatar">
                     <span class="student-name"><?= htmlspecialchars($_SESSION['userLastname'] ?? 'Active Student') ?></span>
                 </a>
